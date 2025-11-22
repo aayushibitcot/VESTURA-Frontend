@@ -24,24 +24,20 @@ export default function HeaderMobileView({
 
   const handleCategoryClick = (categorySlug: string) => {
     setMobileMenuOpen(false)
-    // If already on shop page, update URL silently without triggering route requests
+    // Use Next.js router to update URL, which will properly trigger searchParams updates
     if (pathname === PRIVATE_PATH.SHOP) {
       const params = new URLSearchParams()
       params.set("category", categorySlug)
       const newUrl = `${PRIVATE_PATH.SHOP}?${params.toString()}`
-      // Update URL without triggering Next.js navigation
-      if (window.history.replaceState) {
-        window.history.replaceState(
-          { ...window.history.state },
-          '',
-          newUrl
-        )
-      }
-      // Trigger popstate to notify ProductGrid
-      window.dispatchEvent(new PopStateEvent('popstate'))
+      // Use router.replace to update URL without adding to history, but still trigger Next.js updates
+      startTransition(() => {
+        router.replace(newUrl, { scroll: false })
+      })
     } else {
-      // If not on shop page, navigate normally (this will trigger one route request, which is acceptable)
-      router.push(`${PRIVATE_PATH.SHOP}?category=${categorySlug}`)
+      // If not on shop page, navigate normally
+      startTransition(() => {
+        router.push(`${PRIVATE_PATH.SHOP}?category=${categorySlug}`)
+      })
     }
   }
 

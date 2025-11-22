@@ -4,6 +4,7 @@ import { AppDispatch } from "../store";
 import { productsSlice } from "./reducer";
 import { Product } from "@/types/products";
 import { get } from "../serverApiAction/serverApis";
+import { API_PATH } from "@/utils/constant";
 
 interface FetchProductsParams {
   page?: number;
@@ -12,14 +13,9 @@ interface FetchProductsParams {
   search?: string;
 }
 
-export const fetchProducts = async (params?: FetchProductsParams) => {
+export const fetchProducts = async (dispatch: AppDispatch, params?: FetchProductsParams) => {
   try {
-    const res = await get(`/api/products`, {
-      page: params?.page?.toString() || DEFAULT_PAGINATION.PAGE.toString(),
-      limit: params?.limit?.toString() || DEFAULT_PAGINATION.LIMIT.toString(),
-      category: params?.category || '',
-      search: params?.search || ''
-    });
+    const res = await get(API_PATH.PRODUCTS, params);
     if (!res.success) {
       return {
         message: res.message,

@@ -1,28 +1,26 @@
 "use client";
 
 import { get } from "../serverApiAction/serverApis";
-import { DEFAULT_PAGINATION } from "@/utils/constant";
+import { DEFAULT_PAGINATION, VALIDATION_ERROR_MESSAGE } from "@/utils/constant";
 import { AppDispatch } from "../store";
-import { log } from "console";
 
 export const fetchCategories = async (dispatch: AppDispatch) => {
   try {
     const res = await get('/api/categories');
-    console.log('categories',res);
     if (!res.success) {
       return {
-        message: res.message || 'Failed to fetch categories',
+        message: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_FETCH_CATEGORIES,
         success: false
       };
     }
     
     return {
-      message: res.message || 'Categories fetched successfully',
+      message: res.message || VALIDATION_ERROR_MESSAGE.CATEGORIES_FETCHED_SUCCESSFULLY,
       success: true,
       data: res.data
     };
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+    const errorMessage = err instanceof Error ? err.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR;
     return {
       message: errorMessage,
       success: false
@@ -39,36 +37,20 @@ export const fetchProductsByCategory = async (dispatch: AppDispatch,categoryName
     
     if (!res.success) {
       return {
-        message: res.message || 'Failed to fetch products by category',
+        message: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_FETCH_PRODUCTS_BY_CATEGORY,
         success: false
       };
     }
-    
-    if (!res.success) {
-      return {
-        message: res.message || 'Failed to fetch products by category',
-        success: false
-      };
-    }
-    
     return {
-      message: res.message || 'Products fetched successfully',
-      success: true,
+        message: res.message || VALIDATION_ERROR_MESSAGE.PRODUCTS_FETCHED_SUCCESSFULLY,
+        success: true,
       data: res.data
     };
   } catch (err) {
-    let errorMessage = 'An unexpected error occurred';
-    
+    let errorMessage = VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR;
     if (err instanceof Error) {
-      if (err.message.includes('fetch') || err.message.includes('network')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (err.message.includes('Failed to fetch')) {
-        errorMessage = 'Unable to reach the server. Please try again later.';
-      } else {
-        errorMessage = err.message;
-      }
+      errorMessage = err.message;
     }
-    
     return {
       message: errorMessage,
       success: false

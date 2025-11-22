@@ -55,7 +55,10 @@ export const VALIDATION_ERROR_MESSAGE = {
   UPDATE_FAILED: "Update failed",
   UPDATE_SUCCESS: "Update successful",
   UPDATE_FAILED_USER_ID_NOT_FOUND: "User ID not found",
-
+  FAILED_TO_FETCH_PRODUCTS_BY_CATEGORY: "Failed to fetch products by category",
+  PRODUCTS_FETCHED_SUCCESSFULLY: "Products fetched successfully",
+  FAILED_TO_FETCH_CATEGORIES: "Failed to fetch categories",
+  CATEGORIES_FETCHED_SUCCESSFULLY: "Categories fetched successfully",
 };
 
 // Default pagination
@@ -74,3 +77,9 @@ export const SORT_OPTIONS = [
   { label: "Price: High to Low", value: "price-high-low" },
   { label: "Name: A-Z", value: "name-az" },
 ];
+
+export const  API_PATH = {
+  CATEGORIES: "/api/categories",
+  PRODUCTS: "/api/products",
+  PRODUCTS_BY_CATEGORY: "/api/products/category",
+}

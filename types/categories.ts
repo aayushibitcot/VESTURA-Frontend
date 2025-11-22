@@ -6,3 +6,13 @@ export interface Category {
     description?: string
     productCount?: number
 }
+
+export interface CategoriesResponse {
+    categories: Category[]
+    pagination?: {
+        page: number
+        limit: number
+        total?: number
+        totalPages?: number
+    }
+}
