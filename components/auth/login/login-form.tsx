@@ -9,7 +9,7 @@ import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
 import SimpleReactValidator from "simple-react-validator"
 import { useRouter } from "next/navigation"
 import { useAppDispatch } from "@/store/hooks"
-import { signIn } from "@/store/actions/authAction"
+import { signIn } from "@/store/auth/action"
 
 const defaultForm = {
   email: "",

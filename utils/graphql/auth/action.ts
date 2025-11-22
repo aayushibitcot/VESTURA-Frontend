@@ -10,7 +10,7 @@ import {
   SIGN_UP_MUTATION,
   UPDATE_USER_MUTATION,
 } from "./query";
-import { SignInInput, SignInResponse, SignupFormType, SignUpRespose } from "@/lib/types";
+import { SignInInput, SignInResponse, SignupFormType, SignUpRespose } from "@/types/authType";
 
 export const signInAction = async ({
   variables,

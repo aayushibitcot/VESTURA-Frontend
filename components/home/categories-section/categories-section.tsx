@@ -1,14 +1,13 @@
-"use client";
+"use client"
 
 import { SectionHeading } from '@/components/ui/section-heading'
 import Link from 'next/link'
-import { useCategories } from '@/hooks/use-categories'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Category } from "@/types/categories"
+import { PRIVATE_PATH } from '@/utils/constant'
 
-export default function Categories() {
-  const { categories, isLoading } = useCategories()
-
-  if (isLoading) {
+export default function Categories({ categories }: { categories: Category[] }) {
+  if (!categories || !Array.isArray(categories) || categories.length === 0) {
     return (
       <section className="py-20 md:py-28 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,17 +25,13 @@ export default function Categories() {
     )
   }
 
-  if (categories.length === 0) {
-    return null
-  }
-
   // Take first 4 categories, with first one being featured (larger)
   const featuredCategory = categories[0]
   const otherCategories = categories.slice(1, 4)
 
   return (
     <section className="py-20 md:py-28 bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8"> 
         <SectionHeading
           title="Popular Categories"
           description="Explore our curated collection of premium fashion and apparel"
@@ -44,7 +39,7 @@ export default function Categories() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {/* Featured Category - Large card */}
           {featuredCategory && (
-            <Link href={`/shop?category=${featuredCategory.slug}`} className="group lg:col-span-2 lg:row-span-2">
+            <Link href={`${PRIVATE_PATH.SHOP}?category=${featuredCategory.slug}`} className="group lg:col-span-2 lg:row-span-2">
               <div className="relative h-full min-h-[400px] lg:min-h-[600px] overflow-hidden rounded-lg">
                 <img
                   src={featuredCategory.image || "/placeholder.jpg"}
@@ -80,7 +75,7 @@ export default function Categories() {
           {otherCategories.map((category, index) => (
             <Link
               key={category.id}
-              href={`/shop?category=${category.slug}`}
+              href={`${PRIVATE_PATH.SHOP}?category=${category.slug}`}
               className={`group ${index === 0 ? 'lg:col-span-2' : ''}`}
             >
               <div className="relative h-full min-h-[280px] overflow-hidden rounded-lg">

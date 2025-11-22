@@ -1,6 +1,6 @@
 "use client"
 
-import type { Product } from "@/lib/types"
+import type { Product } from "@/types/products"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-context"
 import { useToast } from "@/hooks/use-toast"
@@ -8,7 +8,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { PRIVATE_PATH } from "@/utils/constant"
-import { useCategories } from "@/hooks/use-categories"
 
 interface ProductDetailsProps {
   product: Product
@@ -17,21 +16,20 @@ interface ProductDetailsProps {
 export default function ProductDetails({ product }: ProductDetailsProps) {
   const { addItem } = useCart()
   const { toast } = useToast()
-  const { categories } = useCategories()
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState<string>("")
   const [selectedColor, setSelectedColor] = useState<string>("")
 
   // Find category by matching product.category (which could be name or slug) with categories
-  const category = categories.find(
-    (cat) => cat.slug === product.category || cat.name.toLowerCase() === product.category.toLowerCase()
-  ) || categories.find((cat) => cat.name.toLowerCase().includes(product.category.toLowerCase()))
+  // const category = categories.find(
+  //   (cat) => cat.slug === product.category || cat.name.toLowerCase() === product.category.toLowerCase()
+  // ) || categories.find((cat) => cat.name.toLowerCase().includes(product.category.toLowerCase()))
   
-  const categorySlug = category?.slug || product.category
-  const categoryName = category?.name || product.category
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ")
+  // const categorySlug = category?.slug || product.category
+  // const categoryName = category?.name || product.category
+  //   .split("-")
+  //   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+  //   .join(" ")
 
   const handleAddToCart = () => {
     if (product.sizes.length > 0 && !selectedSize) {
@@ -99,13 +97,13 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
             <div className="space-y-2">
               <p className="text-sm font-medium">Category:</p>
-              <Link
+              {/* <Link
                 href={`/shop?category=${categorySlug}`}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
               >
                 {categoryName}
                 <ChevronRight className="h-3 w-3" />
-              </Link>
+              </Link> */}
             </div>
 
             <div className="space-y-2">

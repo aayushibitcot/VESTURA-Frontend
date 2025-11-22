@@ -67,3 +67,10 @@ export const DEFAULT_PAGINATION = {
 export const GAP_OPTIONS = [5, 10, 15, 30];
 
 export const STRONG_PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])(?=.{8,})";
+
+export const SORT_OPTIONS = [
+  { label: "Featured", value: "featured" },
+  { label: "Price: Low to High", value: "price-low-high" },
+  { label: "Price: High to Low", value: "price-high-low" },
+  { label: "Name: A-Z", value: "name-az" },
+];

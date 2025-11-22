@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link"
-import { useCategories } from "@/hooks/use-categories"
+import { Category } from "@/types/categories"
+import { PRIVATE_PATH } from "@/utils/constant";
 
-export default function Footer() {
-  const { categories } = useCategories()
-
+export default function Footer({ categories }: { categories?: Category[] | null }) {
   return (
     <footer className="bg-foreground text-background py-12 border-t">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -44,11 +43,11 @@ export default function Footer() {
           <div>
             <h4 className="font-medium text-sm uppercase tracking-wide mb-4">Categories</h4>
             <ul className="space-y-2 text-sm">
-              {categories.length > 0 ? (
-                categories.slice(0, 4).map((category) => (
+              {categories && categories.length > 0 ? (
+                categories?.map((category) => (
                   <li key={category.id}>
                     <Link
-                      href={`/shop?category=${category.slug}`}
+                      href={`${PRIVATE_PATH.SHOP}?category=${category.slug}`}
                       className="text-background/70 hover:text-background transition-colors"
                     >
                       {category.name}
@@ -56,7 +55,7 @@ export default function Footer() {
                   </li>
                 ))
               ) : (
-                <li className="text-background/50">Loading categories...</li>
+                <li className="text-background/50">No categories found</li>
               )}
             </ul>
           </div>

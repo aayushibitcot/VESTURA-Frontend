@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState } from "react"
-import type { Product } from "./types"
+import type { Product } from "@/types/products"
 import { useRouter } from "next/navigation"
 import { PRIVATE_PATH } from "@/utils/constant"
 

@@ -2,16 +2,16 @@
 
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { useCategories } from "@/hooks/use-categories"
 import { PRIVATE_PATH } from "@/utils/constant"
 import { useTransition } from "react"
+import { Category } from "@/types/categories"
 
 type HeaderDesktopViewProps = {
   setMobileMenuOpen?: (open: boolean) => void
+  categories?: Category[]
 }
 
-export default function HeaderDesktopView({ setMobileMenuOpen }: HeaderDesktopViewProps) {
-  const { categories } = useCategories()
+export default function HeaderDesktopView({ setMobileMenuOpen, categories }: HeaderDesktopViewProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
@@ -68,7 +68,7 @@ export default function HeaderDesktopView({ setMobileMenuOpen }: HeaderDesktopVi
           <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-neutral-50 transition-all group-hover:w-full"></span>
         </button>
         <div className="cursor-pointer absolute left-1/2 -translate-x-1/2 mt-4 w-56 bg-neutral-800 border border-neutral-700 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 rounded-sm overflow-hidden">
-          {categories.map((category) => (
+          {categories && categories.length > 0 && categories.map((category) => (
             <button
               key={category.id}
               onClick={() => handleCategoryClick(category.slug)}

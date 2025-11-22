@@ -27,7 +27,7 @@ export default function OrderSuccess() {
     try {
       const storedOrder = sessionStorage.getItem("lastOrder")
 
-      if (storedOrder) {
+      if (storedOrder && storedOrder !== "undefined" && storedOrder !== "null") {
         const parsed = JSON.parse(storedOrder)
         setOrderDetails(parsed)
         // Clear after retrieving

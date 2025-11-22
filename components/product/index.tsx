@@ -1,13 +1,14 @@
+"use client"
 import ProductDetails from "@/components/product/product-details"
 import RelatedProducts from "@/components/product/related-products"
 import type { Product } from "@/lib/types"
 
-interface ProductPageProps {
+interface productComponentProps {
   product: Product
   relatedProducts: Product[]
 }
 
-export default function Product({ product, relatedProducts }: ProductPageProps) {
+const productComponent = ({ product, relatedProducts }: productComponentProps) => {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
@@ -17,4 +18,4 @@ export default function Product({ product, relatedProducts }: ProductPageProps) 
     </div>
   )
 }
-
+export default productComponent;

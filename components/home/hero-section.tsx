@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { useCategories } from "@/hooks/use-categories"
+import { Category } from "@/types/categories"
+import { PRIVATE_PATH } from "@/utils/constant"
 
 const gradients = [
   "from-blue-600/20 via-purple-600/20 to-transparent",
@@ -15,15 +16,14 @@ const gradients = [
   "from-pink-600/20 via-rose-600/20 to-transparent",
 ]
 
-export default function HeroSection() {
-  const { categories, isLoading } = useCategories()
+export default function HeroSection({ categories }: { categories: Category[] }) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
   const [progress, setProgress] = useState(0)
 
   // Create slides from categories (take first 4 categories)
   const slides = useMemo(() => {
-    if (!categories || categories.length === 0) return []
+    if (!categories || !Array.isArray(categories) || categories.length === 0) return []
     
     return categories.slice(0, 4).map((category, index) => ({
       id: category.id,
@@ -33,7 +33,7 @@ export default function HeroSection() {
       image: category.image || "/placeholder.jpg",
       alt: `${category.name} collection`,
       cta: `Shop ${category.name}`,
-      ctaLink: `/shop?category=${category.slug}`,
+      ctaLink: `${PRIVATE_PATH.SHOP}?category=${category.slug}`,
       gradient: gradients[index % gradients.length],
     }))
   }, [categories])
@@ -86,7 +86,7 @@ export default function HeroSection() {
   }
 
   // Show loading or empty state
-  if (isLoading || slides.length === 0) {
+  if (!categories || !Array.isArray(categories) || categories.length === 0) {
     return (
       <section className="relative overflow-hidden bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 lg:py-16">
@@ -135,7 +135,7 @@ export default function HeroSection() {
 
               <div className="flex flex-wrap items-center gap-4 pt-4 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-300">
                 <Button asChild size="lg" className="px-8">
-                  <Link href={slides[currentSlide]?.ctaLink || "/shop"}>{slides[currentSlide]?.cta || "Shop Now"}</Link>
+                  <Link href={slides[currentSlide]?.ctaLink || ""}>{slides[currentSlide]?.cta || "Shop Now"}</Link>
                 </Button>
 
                 <div className="flex gap-2">

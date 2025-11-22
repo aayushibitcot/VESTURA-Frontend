@@ -4,14 +4,15 @@ import Link from "next/link"
 import { useCart } from "@/lib/cart-context"
 import { useState } from "react"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
-import { appLogout } from "@/store/actions/authAction"
+import { appLogout } from "@/store/auth/action"
 import { useRouter } from "next/navigation"
 import { PRIVATE_PATH, PUBLIC_PATH } from "@/utils/constant"
 import HeaderMobileView from "./header-mobile-view"
 import HeaderDropdown from "./header-dropdown"
 import HeaderDesktopView from "./header-desktop-view"
+import { Category } from "@/types/categories"
 
-export default function Header() {
+export default function Header({ categories }: { categories: Category[] }) {
   const { cartCount } = useCart()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -23,8 +24,8 @@ export default function Header() {
   // Get user initials for avatar fallback
   const getUserInitials = () => {
     if (!user) return "U"
-    const firstName = user?.firstName || user?.first_name || ""
-    const lastName = user?.lastName || user?.last_name || ""
+    const firstName = user?.firstName || ""
+    const lastName = user?.lastName ||""
     if (firstName && lastName) {
       return `${firstName[0]}${lastName[0]}`.toUpperCase()
     }
@@ -52,7 +53,7 @@ export default function Header() {
               </div>
             </Link>
 
-            <HeaderDesktopView setMobileMenuOpen={setMobileMenuOpen} />
+            <HeaderDesktopView setMobileMenuOpen={setMobileMenuOpen} categories={categories} />
 
             <HeaderDropdown
               cartCount={cartCount}

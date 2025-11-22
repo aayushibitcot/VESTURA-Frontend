@@ -1,13 +1,12 @@
-"use client";
-
-import { use } from "react";
-import ProductPageClient from "@/components/product/product-page-client"
+import ProductComponent from "@/components/product";
+import { Product } from "@/lib/types";
 
 interface ProductPageProps {
-  params: Promise<{ sku: string }>
+  product: Product
+  relatedProducts: Product[]
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
-  const { sku } = use(params);
-  return <ProductPageClient sku={sku} />
+export default function ProductPage({ product, relatedProducts }: ProductPageProps) {
+  
+  return <ProductComponent product={product} relatedProducts={relatedProducts} />
 }

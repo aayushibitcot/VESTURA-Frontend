@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { useCategories } from "@/hooks/use-categories"
 import { PRIVATE_PATH, PUBLIC_PATH } from "@/utils/constant"
 import { useTransition } from "react"
 
@@ -19,7 +18,6 @@ export default function HeaderMobileView({
   user,
   handleLogout,
 }: HeaderMobileViewProps) {
-  const { categories } = useCategories()
   const router = useRouter()
   const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
@@ -67,7 +65,7 @@ export default function HeaderMobileView({
           Shop
         </Link>
         <div className="text-sm font-semibold uppercase tracking-wider text-neutral-400 pt-2">Categories</div>
-        {categories.map((category) => (
+        {/* {categories.map((category) => (
           <button
             key={category.id}
             onClick={() => handleCategoryClick(category.slug)}
@@ -75,7 +73,7 @@ export default function HeaderMobileView({
           >
             {category.name}
           </button>
-        ))}
+        ))} */}
         <Link
           href={PRIVATE_PATH.CONTACT}
           className="text-sm font-medium uppercase tracking-wider text-neutral-200 hover:text-neutral-50 transition-colors py-1"

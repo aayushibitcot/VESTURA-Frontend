@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 
 import Link from "next/link"
-import type { Product } from "@/lib/types"
+import { Product } from "@/types/products"
 import { Button } from "@/components/ui/button"
 import AddToCartModal from "@/components/shop/add-to-cart-modal"
 import { PRIVATE_PATH } from "@/utils/constant"

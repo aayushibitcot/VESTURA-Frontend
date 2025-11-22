@@ -1,9 +1,10 @@
 import Categories from "./categories-section"
+import { Category } from "@/types/categories"
 
-export default function CategoriesSection() {
+export default function CategoriesSection({ categories }: { categories: Category[] }) {
   return (
     <>
-      <Categories /> 
+      <Categories categories={categories} /> 
     </>
   )
 }

@@ -2,19 +2,20 @@
 
 import { useState, useEffect } from "react"
 import { Search } from "lucide-react"
-import { useProducts } from "@/hooks/use-products"
 import Link from "next/link"
 import Image from "next/image"
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog"
+import { fetchProducts } from "@/store/products/action"
+import { Product } from "@/types/products"
 
 interface SearchModalProps {
   open: boolean
   onClose: () => void
 }
 
-export function SearchModal({ open, onClose }: SearchModalProps) {
+export async function SearchModal({ open, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState("")
-  const { products } = useProducts({ autoFetch: true })
+  const { data: products, success } = await fetchProducts({ search: searchQuery })
   const [searchResults, setSearchResults] = useState(products)
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
       setSearchResults(products)
     } else {
       const filtered = products.filter(
-        (product) =>
+        (product: Product) =>
           product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.category.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -57,7 +58,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
         <div className="overflow-y-auto max-h-[calc(80vh-120px)] p-6">
           {searchResults.length > 0 ? (
             <div className="grid gap-4">
-              {searchResults.slice(0, 8).map((product) => (
+              {searchResults.slice(0, 8).map((product: Product) => (
                 <Link
                   key={product.sku}
                   href={`/product/${product.sku}`}

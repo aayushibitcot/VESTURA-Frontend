@@ -1,6 +1,6 @@
 "use client"
 
-import type { Product } from "@/lib/types"
+import { Product } from "@/types/products"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-context"
 import { useToast } from "@/hooks/use-toast"
