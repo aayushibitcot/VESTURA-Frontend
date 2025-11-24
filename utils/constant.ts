@@ -59,6 +59,8 @@ export const VALIDATION_ERROR_MESSAGE = {
   PRODUCTS_FETCHED_SUCCESSFULLY: "Products fetched successfully",
   FAILED_TO_FETCH_CATEGORIES: "Failed to fetch categories",
   CATEGORIES_FETCHED_SUCCESSFULLY: "Categories fetched successfully",
+  FAILED_TO_FETCH_CART: "Failed to fetch cart",
+  CART_FETCHED_SUCCESSFULLY: "Cart fetched successfully",
 };
 
 // Default pagination
@@ -82,4 +84,5 @@ export const  API_PATH = {
   CATEGORIES: "/api/categories",
   PRODUCTS: "/api/products",
   PRODUCTS_BY_CATEGORY: "/api/products/category",
+  CART: "/api/cart",
 }

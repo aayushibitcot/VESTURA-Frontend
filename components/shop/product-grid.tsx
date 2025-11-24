@@ -1,9 +1,9 @@
 "use client"
 
-import { use, useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import ProductCard from "@/components/ui/product-card"
-import { DEFAULT_PAGINATION, SORT_OPTIONS } from "@/utils/constant"
+import { DEFAULT_PAGINATION, PRIVATE_PATH, SORT_OPTIONS } from "@/utils/constant"
 import { Product } from "@/types/products"
 import { Category } from "@/types/categories"
 import { fetchProductsByCategory } from "@/store/categories/action"
@@ -17,33 +17,53 @@ interface ProductGridProps {
   totalProducts: number;
 }
 
-
 export default function ProductGrid({ products, categories, totalProducts }: ProductGridProps) {
+
+  const searchParams = useSearchParams()
+  const dispatch = useAppDispatch()
+  const router = useRouter()
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<string>("featured")
   const [sortedProducts, setSortedProducts] = useState<Product[]>(products)
-  const [totalCount, setTotalCount] = useState<number>(totalProducts)
-  const [pagination, setPagination] = useState<any>({
-     page: DEFAULT_PAGINATION.PAGE, 
-     limit: DEFAULT_PAGINATION.LIMIT 
-  })
-  
-  const dispatch = useAppDispatch()
-  const handleCategoryChange = async (category: string) => {
+  const [hasMore, setHasMore] = useState<boolean>(true)
+  const [totalProductsCount, setTotalProductsCount] = useState<number>(totalProducts)
+  const [totalCategoriesCount, setTotalCategoriesCount] = useState<number>(categories.length)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [pagination, setPagination] = useState<any>({ page: DEFAULT_PAGINATION.PAGE, limit: DEFAULT_PAGINATION.LIMIT })
+
+  const handleCategoryChange = useCallback(async (category: string) => {
     if (category === "all") {
       const response = await fetchProducts(dispatch, { page: DEFAULT_PAGINATION.PAGE, limit: DEFAULT_PAGINATION.LIMIT })
       if (response.success) {
         setSortedProducts(response.data?.products || [])
+        setTotalProductsCount(response.data?.pagination?.total || totalProducts)
+        router.push(`${PRIVATE_PATH.SHOP}`)
       }
     } else {
       const response = await fetchProductsByCategory(dispatch, category)
       if (response.success) {
-        setSortedProducts(response.data.products)
+        setSortedProducts(response.data.products || [])
+        setTotalCategoriesCount(response.data.products?.length || 0)
+        router.push(`${PRIVATE_PATH.SHOP}?category=${category}`)
       }
     }
-    setSelectedCategory(category)
-  }
+    setSelectedCategory(category === "all" ? null : category)
+  }, [dispatch, totalProducts])
+
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category')
+    if (categoryFromUrl) {
+      if (categoryFromUrl !== selectedCategory) {
+        handleCategoryChange(categoryFromUrl)
+      }
+    } else {
+      if (selectedCategory !== null) {
+        setSelectedCategory(null)
+        setSortedProducts(products)
+      }
+    }
+  }, [searchParams])
   
   const getFilteredproduct = async (pagination: any, append: boolean = false) => {
     const response = await fetchProducts(dispatch, pagination)
@@ -52,7 +72,6 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
     }
   }
 
-  // Apply sorting to products
   const getSortedProducts = () => {
     const productsToSort = [...sortedProducts]
     switch (sortOrder) {
@@ -72,7 +91,7 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
     const newPagination = { ...pagination, page: pagination.page + 1 };
     setPagination(newPagination);
     getFilteredproduct(newPagination);
-}
+  }
 
   return (
     <div>
@@ -105,14 +124,12 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted-foreground">
           <>
-            Showing {totalProducts} {totalProducts === 1 ? "product" : "products"}
+            Showing {selectedCategory === "all" || !selectedCategory ? totalProductsCount : totalCategoriesCount}{" "}
+            {(selectedCategory === "all" || !selectedCategory ? totalProductsCount : totalCategoriesCount) === 1 ? "product" : "products"}
           </>
         </p>
-        <select
-          className="text-sm border border-border px-4 py-2 bg-background rounded-md"
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-        >
+        <select className="text-sm border border-border px-4 py-2 bg-background rounded-md" 
+          value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
           {SORT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>{option.label}</option>
           ))}

@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { PRIVATE_PATH } from "@/utils/constant"
-import { useTransition } from "react"
 import { Category } from "@/types/categories"
+import { fetchProductsByCategory } from "@/store/categories/action"
+import { useAppDispatch } from "@/store/hooks"
 
 type HeaderDesktopViewProps = {
   setMobileMenuOpen?: (open: boolean) => void
@@ -13,25 +14,11 @@ type HeaderDesktopViewProps = {
 
 export default function HeaderDesktopView({ setMobileMenuOpen, categories }: HeaderDesktopViewProps) {
   const router = useRouter()
-  const pathname = usePathname()
-  const [isPending, startTransition] = useTransition()
+  const dispatch = useAppDispatch()
 
-  const handleCategoryClick = (categorySlug: string) => {
-    // Use Next.js router to update URL, which will properly trigger searchParams updates
-    if (pathname === PRIVATE_PATH.SHOP) {
-      const params = new URLSearchParams()
-      params.set("category", categorySlug)
-      const newUrl = `${PRIVATE_PATH.SHOP}?${params.toString()}`
-      // Use router.replace to update URL without adding to history, but still trigger Next.js updates
-      startTransition(() => {
-        router.replace(newUrl, { scroll: false })
-      })
-    } else {
-      // If not on shop page, navigate normally
-      startTransition(() => {
-        router.push(`${PRIVATE_PATH.SHOP}?category=${categorySlug}`)
-      })
-    }
+  const handleCategoryClick = async (categorySlug: string) => {
+    await fetchProductsByCategory(dispatch, categorySlug)
+    router.push(`${PRIVATE_PATH.SHOP}?category=${categorySlug}`) 
   }
 
   return (
@@ -64,7 +51,7 @@ export default function HeaderDesktopView({ setMobileMenuOpen, categories }: Hea
           <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-neutral-50 transition-all group-hover:w-full"></span>
         </button>
         <div className="cursor-pointer absolute left-1/2 -translate-x-1/2 mt-4 w-56 bg-neutral-800 border border-neutral-700 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 rounded-sm overflow-hidden">
-          {categories && categories.length > 0 && categories.map((category) => (
+          {categories?.map((category) => (
             <button
               key={category.id}
               onClick={() => handleCategoryClick(category.slug)}

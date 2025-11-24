@@ -5,13 +5,8 @@ import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-context"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { fetchCart } from "@/store/cart/action"
 
 interface AddToCartModalProps {
   product: Product | null
@@ -26,10 +21,8 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
   const [selectedSize, setSelectedSize] = useState<string>("")
   const [selectedColor, setSelectedColor] = useState<string>("")
 
-  // Reset state when modal opens/closes
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      // Reset state when closing
       setQuantity(1)
       setSelectedSize("")
       setSelectedColor("")
@@ -37,8 +30,9 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
     onOpenChange(newOpen)
   }
 
-  const handleAddToCart = () => {
-    if (!product) return
+  const handleAddToCart = async () => {
+    const res = await fetchCart();
+    if (!product) return;
 
     if (product.sizes.length > 0 && !selectedSize) {
       toast({
@@ -65,7 +59,6 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
       description: `${quantity} × ${product.name}${selectedSize ? ` (Size: ${selectedSize})` : ""}${selectedColor ? `, ${selectedColor}` : ""} added to your cart.`,
     })
 
-    // Close modal after adding to cart
     handleOpenChange(false)
   }
 
@@ -112,10 +105,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
                   </label>
                   <div className="flex flex-wrap gap-3">
                     {product.colors.map((color) => {
-                      // Handle both string and object color formats
-                      const colorName = typeof color === 'string' ? color : color.name;
-                      const colorHex = typeof color === 'string' ? '#000000' : color.hex;
-                      
+                      const colorName = color as string;                     
                       return (
                         <button
                           key={colorName}
@@ -125,7 +115,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
                               ? "border-foreground scale-110"
                               : "border-border hover:border-muted-foreground hover:scale-105"
                           }`}
-                          style={{ backgroundColor: colorHex }}
+                          style={{ backgroundColor: colorName }}
                           title={colorName}
                           aria-label={`Select ${colorName} color`}
                         >

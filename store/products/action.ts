@@ -35,8 +35,6 @@ export const fetchProducts = async (dispatch: AppDispatch, params?: FetchProduct
   }
 };
 
-
-
 export const fetchProductBySku = async (
   dispatch: AppDispatch,
   sku: string

@@ -15,4 +15,5 @@ export default async function ShopPage({ searchParams }: Props) {
   return <Shop products={response?.data?.products || []} 
     categories={res?.data || []} 
     totalCount={response?.data?.pagination?.total || 0} 
-  />}
+  />
+}
