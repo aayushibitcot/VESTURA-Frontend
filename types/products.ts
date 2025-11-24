@@ -5,17 +5,18 @@ export interface Product {
     price: number
     currency: string
     image: string
-    images?: string[] // Array of product images
+    images?: string[] 
     category: string
     inStock: boolean
-    stockQuantity?: number // Stock quantity
-    sizes: string[] // Added sizes array for clothing/shoe size options
-    colors: string[] | { name: string; hex: string }[] // Colors can be string array from API or object array for UI
-    specifications?: Record<string, any> // Product specifications
-    rating?: number // Product rating
-    reviewCount?: number // Number of reviews
-    createdAt?: string // Creation timestamp
-    updatedAt?: string // Last update timestamp
+    stockQuantity?: number 
+    sizes?: string[] 
+    colors?: string[] | { name: string; hex: string }[] 
+    specifications?: Record<string, any> 
+    rating?: number 
+    reviewCount?: number 
+    createdAt?: string 
+    updatedAt?: string 
+    relatedProducts?: Product[] 
 }
   
 export interface ProductsResponse {

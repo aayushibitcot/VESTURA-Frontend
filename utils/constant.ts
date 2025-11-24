@@ -61,6 +61,14 @@ export const VALIDATION_ERROR_MESSAGE = {
   CATEGORIES_FETCHED_SUCCESSFULLY: "Categories fetched successfully",
   FAILED_TO_FETCH_CART: "Failed to fetch cart",
   CART_FETCHED_SUCCESSFULLY: "Cart fetched successfully",
+  FAILED_TO_ADD_TO_CART: "Failed to add item to cart",
+  ITEM_ADDED_TO_CART_SUCCESSFULLY: "Item added to cart successfully",
+  AUTHENTICATION_REQUIRED: "Authentication required. Please login to continue.",
+  UNAUTHORIZED_ACCESS: "Unauthorized access. Please login again.",
+  PLEASE_SELECT_A_SIZE: "Please select a size",
+  PLEASE_SELECT_A_COLOR: "Please select a color",
+  FAILED_TO_FETCH_PRODUCT: "Failed to fetch product",
+  PRODUCT_FETCHED_SUCCESSFULLY: "Product fetched successfully",
 };
 
 // Default pagination
@@ -85,4 +93,5 @@ export const  API_PATH = {
   PRODUCTS: "/api/products",
   PRODUCTS_BY_CATEGORY: "/api/products/category",
   CART: "/api/cart",
+  ADD_TO_CART: "/api/cart/items",
 }

@@ -7,57 +7,74 @@ import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
-import { PRIVATE_PATH } from "@/utils/constant"
+import { PRIVATE_PATH, PUBLIC_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
+import { addToCart } from "@/store/cart/action"
+import { useRouter } from "next/navigation"
 
 interface ProductDetailsProps {
   product: Product
 }
 
 export default function ProductDetails({ product }: ProductDetailsProps) {
+  const router = useRouter()
   const { addItem } = useCart()
   const { toast } = useToast()
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState<string>("")
   const [selectedColor, setSelectedColor] = useState<string>("")
 
-  // Find category by matching product.category (which could be name or slug) with categories
-  // const category = categories.find(
-  //   (cat) => cat.slug === product.category || cat.name.toLowerCase() === product.category.toLowerCase()
-  // ) || categories.find((cat) => cat.name.toLowerCase().includes(product.category.toLowerCase()))
-  
-  // const categorySlug = category?.slug || product.category
-  // const categoryName = category?.name || product.category
-  //   .split("-")
-  //   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-  //   .join(" ")
-
-  const handleAddToCart = () => {
-    if (product.sizes.length > 0 && !selectedSize) {
+  const handleAddToCart = async () => {
+    if (!product) return;
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
       toast({
-        title: "Please select a size",
-        description: "You must select a size before adding to cart.",
+        title: VALIDATION_ERROR_MESSAGE.PLEASE_SELECT_A_SIZE,
+        description: VALIDATION_ERROR_MESSAGE.PLEASE_SELECT_A_SIZE,
+        variant: "destructive",
+      })
+      return
+    }
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.PLEASE_SELECT_A_COLOR,
+        description: VALIDATION_ERROR_MESSAGE.PLEASE_SELECT_A_COLOR,
         variant: "destructive",
       })
       return
     }
 
-    if (product.colors.length > 0 && !selectedColor) {
+    const res = await addToCart({ productSku: product.sku, quantity: quantity, selectedSize: selectedSize, selectedColor: selectedColor });
+    if (!res.success) {
+      if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
+        toast({
+          title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
+          description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
+          variant: "destructive",
+        })
+        router.push(PUBLIC_PATH.LOGIN)
+        return
+      }
+      
       toast({
-        title: "Please select a color",
-        description: "You must select a color before adding to cart.",
+        title: VALIDATION_ERROR_MESSAGE.FAILED_TO_ADD_TO_CART,
+        description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_ADD_TO_CART,
         variant: "destructive",
       })
       return
     }
 
-    addItem(product, quantity)
+    addItem({
+      ...product,
+      quantity: quantity,
+      selectedSize: selectedSize,
+      selectedColor: selectedColor,
+    })
 
     toast({
-      title: "Added to cart",
+      title: VALIDATION_ERROR_MESSAGE.ITEM_ADDED_TO_CART_SUCCESSFULLY,
       description: `${quantity} × ${product.name}${selectedSize ? ` (Size: ${selectedSize})` : ""}${selectedColor ? `, ${selectedColor}` : ""} added to your cart.`,
     })
   }
-
+  
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Breadcrumb */}
@@ -97,13 +114,13 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
             <div className="space-y-2">
               <p className="text-sm font-medium">Category:</p>
-              {/* <Link
-                href={`/shop?category=${categorySlug}`}
+              <Link
+                href={`/shop?category=${product.category}`}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
               >
-                {categoryName}
+                {product.category}
                 <ChevronRight className="h-3 w-3" />
-              </Link> */}
+              </Link>
             </div>
 
             <div className="space-y-2">
@@ -113,16 +130,14 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           </div>
 
           <div className="space-y-4">
-            {product.colors.length > 0 && (
+            {product.colors && product.colors.length > 0 && (
               <div className="space-y-3">
                 <label className="text-sm font-medium">
                   Color: {selectedColor && <span className="text-muted-foreground ml-2">{selectedColor}</span>}
                 </label>
                 <div className="flex flex-wrap gap-3">
                   {product.colors.map((color) => {
-                    // Handle both string and object color formats
-                    const colorName = typeof color === 'string' ? color : color.name;
-                    const colorHex = typeof color === 'string' ? '#000000' : color.hex;
+                    const colorName = color as string;
                     
                     return (
                       <button
@@ -133,7 +148,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                             ? "border-foreground scale-110"
                             : "border-border hover:border-muted-foreground hover:scale-105"
                         }`}
-                        style={{ backgroundColor: colorHex }}
+                        style={{ backgroundColor: colorName }}
                         title={colorName}
                         aria-label={`Select ${colorName} color`}
                       >
@@ -149,7 +164,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
               </div>
             )}
 
-            {product.sizes.length > 0 && (
+            {product.sizes && product.sizes.length > 0 && (
               <div className="space-y-3">
                 <label className="text-sm font-medium">
                   Size: {selectedSize && <span className="text-muted-foreground ml-2">{selectedSize}</span>}

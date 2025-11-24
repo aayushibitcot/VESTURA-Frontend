@@ -4,6 +4,7 @@ import { Product, ProductsResponse } from "@/types/products";
 interface ProductsState {
   products: Product[];
   currentProduct: Product | null;
+  relatedProducts: Product[];
   pagination: {
     page: number;
     limit: number;
@@ -17,6 +18,7 @@ interface ProductsState {
 const initialState: ProductsState = {
   products: [],
   currentProduct: null,
+  relatedProducts: [],
   pagination: null,
   isLoading: false,
   error: null,
@@ -39,9 +41,14 @@ export const productsSlice = createSlice({
       state.currentProduct = action.payload;
       state.error = null;
     },
+    setRelatedProducts: (state: ProductsState, action: PayloadAction<Product[]>) => {
+      state.relatedProducts = action.payload;
+      state.error = null;
+    },
     resetProducts: (state: ProductsState) => {
       state.products = [];
       state.currentProduct = null;
+      state.relatedProducts = [];
       state.pagination = null;
       state.error = null;
       state.isLoading = false;
@@ -49,7 +56,7 @@ export const productsSlice = createSlice({
   },
 });
 
-export const { setProducts, setProductsWithPagination, setCurrentProduct, resetProducts } = productsSlice.actions;
+export const { setProducts, setProductsWithPagination, setCurrentProduct, setRelatedProducts, resetProducts } = productsSlice.actions;
 
 export default productsSlice.reducer;
 

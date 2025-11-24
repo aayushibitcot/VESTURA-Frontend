@@ -8,13 +8,15 @@ import { PRIVATE_PATH } from "@/utils/constant"
 
 export interface CartItem extends Product {
   quantity: number
+  selectedSize?: string
+  selectedColor?: string
 }
 
 interface CartContextType {
   cartItems: CartItem[]
   cartCount: number
   totalPrice: number
-  addItem: (product: Product, quantity?: number) => void
+  addItem: (product: CartItem) => void
   removeItem: (sku: string) => void
   updateQuantity: (sku: string, quantity: number) => void
   clearCart: () => void
@@ -30,13 +32,13 @@ export default function CartProvider({ children }: { children: React.ReactNode }
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
-  const addItem = (product: Product, quantity = 1) => {
+  const addItem = (product: CartItem) => {
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item.sku === product.sku)
       if (existingItem) {
-        return prev.map((item) => (item.sku === product.sku ? { ...item, quantity: item.quantity + quantity } : item))
+        return prev.map((item) => (item.sku === product.sku ? { ...item, quantity: item.quantity + product.quantity, selectedSize: product.selectedSize, selectedColor: product.selectedColor } : item))
       }
-      return [...prev, { ...product, quantity }]
+      return [...prev, { ...product, selectedSize: product.selectedSize, selectedColor: product.selectedColor }]
     })
   }
 

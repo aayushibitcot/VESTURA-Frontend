@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-context"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { fetchCart } from "@/store/cart/action"
+import { addToCart } from "@/store/cart/action"
+import { PUBLIC_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
 
 interface AddToCartModalProps {
   product: Product | null
@@ -17,6 +19,7 @@ interface AddToCartModalProps {
 export default function AddToCartModal({ product, open, onOpenChange }: AddToCartModalProps) {
   const { addItem } = useCart()
   const { toast } = useToast()
+  const router = useRouter()
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState<string>("")
   const [selectedColor, setSelectedColor] = useState<string>("")
@@ -31,31 +34,54 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
   }
 
   const handleAddToCart = async () => {
-    const res = await fetchCart();
     if (!product) return;
-
-    if (product.sizes.length > 0 && !selectedSize) {
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
       toast({
-        title: "Please select a size",
-        description: "You must select a size before adding to cart.",
+        title: VALIDATION_ERROR_MESSAGE.PLEASE_SELECT_A_SIZE,
+        description: VALIDATION_ERROR_MESSAGE.PLEASE_SELECT_A_SIZE,
+        variant: "destructive",
+      })
+      return
+    }
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.PLEASE_SELECT_A_COLOR,
+        description: VALIDATION_ERROR_MESSAGE.PLEASE_SELECT_A_COLOR,
         variant: "destructive",
       })
       return
     }
 
-    if (product.colors.length > 0 && !selectedColor) {
+    const res = await addToCart({ productSku: product.sku, quantity: quantity, selectedSize: selectedSize, selectedColor: selectedColor });
+    if (!res.success) {
+      if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
+        toast({
+          title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
+          description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
+          variant: "destructive",
+        })
+        handleOpenChange(false)
+        router.push(PUBLIC_PATH.LOGIN)
+        return
+      }
+      
       toast({
-        title: "Please select a color",
-        description: "You must select a color before adding to cart.",
+        title: VALIDATION_ERROR_MESSAGE.FAILED_TO_ADD_TO_CART,
+        description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_ADD_TO_CART,
         variant: "destructive",
       })
       return
     }
 
-    addItem(product, quantity)
+    addItem({
+      ...product,
+      quantity: quantity,
+      selectedSize: selectedSize,
+      selectedColor: selectedColor,
+    })
 
     toast({
-      title: "Added to cart",
+      title: VALIDATION_ERROR_MESSAGE.ITEM_ADDED_TO_CART_SUCCESSFULLY,
       description: `${quantity} × ${product.name}${selectedSize ? ` (Size: ${selectedSize})` : ""}${selectedColor ? `, ${selectedColor}` : ""} added to your cart.`,
     })
 
@@ -98,14 +124,14 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
 
             <div className="flex-1 space-y-4">
               {/* Color Selection */}
-              {product.colors.length > 0 && (
+              {product.colors && product.colors.length > 0 && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Color: {selectedColor && <span className="text-muted-foreground ml-2">{selectedColor}</span>}
                   </label>
                   <div className="flex flex-wrap gap-3">
                     {product.colors.map((color) => {
-                      const colorName = color as string;                     
+                      const colorName = color as string;
                       return (
                         <button
                           key={colorName}
@@ -115,7 +141,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
                               ? "border-foreground scale-110"
                               : "border-border hover:border-muted-foreground hover:scale-105"
                           }`}
-                          style={{ backgroundColor: colorName }}
+                          style={{ backgroundColor: colorName.toLowerCase() }}
                           title={colorName}
                           aria-label={`Select ${colorName} color`}
                         >
@@ -132,7 +158,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
               )}
 
               {/* Size Selection */}
-              {product.sizes.length > 0 && (
+              {product.sizes && product.sizes.length > 0 && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Size: {selectedSize && <span className="text-muted-foreground ml-2">{selectedSize}</span>}

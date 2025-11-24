@@ -5,7 +5,6 @@ import { SignInInput, SignupFormType } from "@/types/authType";
 import { VALIDATION_ERROR_MESSAGE } from "@/utils/constant";
 import { post } from "../serverApiAction/serverApis";
 
-
 export const signUp = async (userData: SignupFormType) => {
   try {
     const res = await post('/api/auth/signup', userData);
@@ -40,10 +39,24 @@ export const signIn = async (credentials: SignInInput, dispatch: AppDispatch) =>
         success: false
       };
     }
-    // dispatch(authSlice.actions.login(res));
+    const responseData = res.data || res;
+    const token = responseData?.token;
+    const user = responseData?.user;
+    
+    const finalToken = token;
+    if (finalToken) {
+      dispatch(authSlice.actions.login({ token: finalToken, user: user || {}, access_token: finalToken }));
+    } else {
+      return {
+        message: res.message,
+        success: false
+      };
+    }
+    
     return {
       message: res.message,
       success: true,
+      data: res.data
     };
   } catch (err) {
     return {

@@ -42,6 +42,15 @@ export const post = async <T = any>(url: string, body: object): Promise<ApiRespo
     const result = await response.json();
 
     if (!response.ok) {
+      // Handle 401 Unauthorized specifically
+      if (response.status === 401) {
+        return {
+          success: false,
+          message: result.message || result.error || 'Authentication required',
+          error: 'UNAUTHORIZED',
+          data: result.data,
+        };
+      }
       return {
         success: false,
         message: result.message || result.error || 'Request failed',
@@ -93,6 +102,15 @@ export const get = async <T = any>(url: string, params?: object): Promise<ApiRes
     const result = await response.json();
 
     if (!response.ok) {
+      // Handle 401 Unauthorized specifically
+      if (response.status === 401) {
+        return {
+          success: false,
+          message: result.message || result.error || 'Authentication required',
+          error: 'UNAUTHORIZED',
+          data: result.data,
+        };
+      }
       return {
         success: false,
         message: result.message || result.error || 'Request failed',
@@ -130,6 +148,15 @@ export const put = async <T = any>(url: string, body: object): Promise<ApiRespon
     const result = await response.json();
 
     if (!response.ok) {
+      // Handle 401 Unauthorized specifically
+      if (response.status === 401) {
+        return {
+          success: false,
+          message: result.message || result.error || 'Authentication required',
+          error: 'UNAUTHORIZED',
+          data: result.data,
+        };
+      }
       return {
         success: false,
         message: result.message || result.error || 'Request failed',

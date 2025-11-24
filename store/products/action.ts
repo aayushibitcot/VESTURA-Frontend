@@ -35,16 +35,13 @@ export const fetchProducts = async (dispatch: AppDispatch, params?: FetchProduct
   }
 };
 
-export const fetchProductBySku = async (
-  dispatch: AppDispatch,
-  sku: string
-) => {
+export const fetchProductBySku = async ( dispatch: AppDispatch,sku: string) => {
   try {
 
-    const res = await get(`/api/products/${sku}`);
+    const res = await get(API_PATH.PRODUCTS + `/${sku}`);
     
     if (!res.success) {
-      let errorMessage = res.message || 'Failed to fetch product';      
+      let errorMessage = res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_FETCH_PRODUCT;      
       return {
         message: errorMessage,
         success: false
@@ -52,26 +49,36 @@ export const fetchProductBySku = async (
     }
     
     let product = res.data as Product;
+    const relatedProducts = product.relatedProducts || [];
     
-    dispatch(productsSlice.actions.setCurrentProduct(product));
+    // Ensure sizes and colors are always arrays
+    const normalizedProduct = {
+      ...product,
+      sizes: product.sizes || [],
+      colors: product.colors || [],
+    };
+    
+    // Normalize related products to ensure sizes and colors are arrays
+    const normalizedRelatedProducts = relatedProducts.map((relatedProduct) => ({
+      ...relatedProduct,
+      sizes: relatedProduct.sizes || [],
+      colors: relatedProduct.colors || [],
+    }));
+    
+    // Remove relatedProducts from product object before storing
+    const { relatedProducts: _, ...productWithoutRelated } = normalizedProduct;
+    
+    dispatch(productsSlice.actions.setCurrentProduct(productWithoutRelated as Product));
+    dispatch(productsSlice.actions.setRelatedProducts(normalizedRelatedProducts));
 
     return {
-      message: res.message || 'Product fetched successfully',
+      message: res.message || VALIDATION_ERROR_MESSAGE.PRODUCT_FETCHED_SUCCESSFULLY,
       success: true,
-      data: product
+      data: productWithoutRelated as Product,
+      relatedProducts: normalizedRelatedProducts
     };
   } catch (err) {
-    let errorMessage = 'An unexpected error occurred';
-    
-    if (err instanceof Error) {
-      if (err.message.includes('fetch') || err.message.includes('network')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (err.message.includes('Failed to fetch')) {
-        errorMessage = 'Unable to reach the server. Please try again later.';
-      } else {
-        errorMessage = err.message;
-      }
-    }
+    let errorMessage = err instanceof Error ? err.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR;
     
     return {
       message: errorMessage,

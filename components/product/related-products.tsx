@@ -1,4 +1,4 @@
-import type { Product } from "@/lib/types"
+import type { Product } from "@/types/products"
 import ProductCard from "@/components/ui/product-card"
 import { SectionHeading } from "../ui/section-heading"
 
