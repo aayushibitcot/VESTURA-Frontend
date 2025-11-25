@@ -21,7 +21,7 @@ import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE, PUBLIC_PATH } from "@/utils/con
 import { clearCart } from "@/store/cart/action"
 import { useRouter } from "next/navigation"
 import { CartData, CartItemFromAPI } from "@/types/cart"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 interface CartProps {
   cartData?: CartData
@@ -31,6 +31,7 @@ export default function Cart({ cartData }: CartProps) {
   const { toast } = useToast()
   const router = useRouter()
   const [cartItems, setCartItems] = useState<CartItemFromAPI[]>(cartData?.items || [])
+  const [cartTotal, setCartTotal] = useState<number>(cartData?.total || 0)
 
   const handleClearCart = async () => {
     const res = await clearCart()
@@ -55,12 +56,21 @@ export default function Cart({ cartData }: CartProps) {
     }
 
     setCartItems([])
+    setCartTotal(0)
 
     toast({
       title: VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
       description: res.message || VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
     })
   }
+
+  // Update cart items and total when cartData changes
+  useEffect(() => {
+    if (cartData) {
+      setCartItems(cartData.items || [])
+      setCartTotal(cartData.total || 0)
+    }
+  }, [cartData])
 
   if (!cartItems || cartItems.length === 0) {
     return (
@@ -114,8 +124,21 @@ export default function Cart({ cartData }: CartProps) {
       </div>
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-8">
-        <CartItems cartItems={cartItems} />
-        <OrderSummary />
+        <CartItems 
+          cartItems={cartItems} 
+          onItemsChange={(items) => {
+            setCartItems(items)
+            // Recalculate total from items subtotals
+            const newTotal = items.reduce((sum, item) => sum + (item.subtotal || 0), 0)
+            setCartTotal(newTotal)
+          }}
+        />
+        <OrderSummary 
+          orderItems={cartItems} 
+          orderTotal={cartTotal} 
+          useApiData={true}
+          variant="cart"
+        />
       </div>
     </div>
   )

@@ -11,9 +11,10 @@ import { CartItemFromAPI } from "@/types/cart"
 
 interface CartItemsProps {
   cartItems?: CartItemFromAPI[]
+  onItemsChange?: (items: CartItemFromAPI[]) => void
 }
 
-export default function CartItems({ cartItems: cartItemsProp }: CartItemsProps) {
+export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: CartItemsProps) {
   const { toast } = useToast()
   const router = useRouter()
   const [cartItemsData, setCartItemsData] = useState<CartItemFromAPI[]>(cartItemsProp || [])
@@ -24,7 +25,12 @@ export default function CartItems({ cartItems: cartItemsProp }: CartItemsProps) 
       setIsLoading(true)
       const res = await fetchCart()
       if (res.success && res.data) {
-        setCartItemsData(res.data.items || [])
+        const fetchedItems = res.data.items || []
+        setCartItemsData(fetchedItems)
+        // Notify parent of fetched items
+        if (onItemsChange) {
+          onItemsChange(fetchedItems)
+        }
       } else {
         if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
           toast({
@@ -54,6 +60,13 @@ export default function CartItems({ cartItems: cartItemsProp }: CartItemsProps) 
     }
   }, [cartItemsProp, toast, router])
 
+  // Notify parent when items change
+  useEffect(() => {
+    if (onItemsChange) {
+      onItemsChange(cartItemsData)
+    }
+  }, [cartItemsData, onItemsChange])
+
   const handleRemoveItem = async (itemId: string) => {
     const res = await removeCartItem(itemId)
     
@@ -76,8 +89,22 @@ export default function CartItems({ cartItems: cartItemsProp }: CartItemsProps) 
       return
     }
 
-    // Remove item from local state
-    setCartItemsData(prev => prev.filter(cartItem => cartItem.id !== itemId))
+    // Fetch updated cart to get latest data including total
+    const cartRes = await fetchCart()
+    if (cartRes.success && cartRes.data) {
+      const updatedItems = cartRes.data.items || []
+      setCartItemsData(updatedItems)
+      // Notify parent of updated items
+      if (onItemsChange) {
+        onItemsChange(updatedItems)
+      }
+    } else {
+      // Fallback: Remove item from local state if fetch fails
+      setCartItemsData(prev => prev.filter(cartItem => cartItem.id !== itemId))
+      if (onItemsChange) {
+        onItemsChange(cartItemsData.filter(cartItem => cartItem.id !== itemId))
+      }
+    }
     
     toast({
       title: VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,

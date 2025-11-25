@@ -3,6 +3,7 @@
 import { useCart } from "@/lib/cart-context"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { CartItemFromAPI } from "@/types/cart"
 
 interface OrderItem {
   name: string
@@ -20,8 +21,10 @@ interface OrderSummaryProps {
   submitButtonText?: string
   className?: string
   // For success variant - static order data
-  orderItems?: OrderItem[]
+  orderItems?: OrderItem[] | CartItemFromAPI[]
   orderTotal?: number
+  // For cart variant - use API data instead of context
+  useApiData?: boolean
 }
 
 export default function OrderSummary({
@@ -33,12 +36,58 @@ export default function OrderSummary({
   className = "",
   orderItems,
   orderTotal,
+  useApiData = false,
 }: OrderSummaryProps) {
   const { cartItems, cartCount, totalPrice, redirectToCheckout } = useCart()
 
-  // Use orderItems if provided (success variant), otherwise use cartItems
-  const items = variant === "success" && orderItems ? orderItems : cartItems
-  const displayTotal = variant === "success" && orderTotal !== undefined ? orderTotal : totalPrice
+  // Convert CartItemFromAPI[] to OrderItem[] format if needed
+  const convertToOrderItems = (items: OrderItem[] | CartItemFromAPI[]): OrderItem[] => {
+    if (!items || items.length === 0) return []
+    
+    // Check if first item is CartItemFromAPI (has product property)
+    if (items[0] && 'product' in items[0]) {
+      return (items as CartItemFromAPI[]).map(item => ({
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        image: item.product.image,
+        sku: item.product.sku,
+      }))
+    }
+    return items as OrderItem[]
+  }
+
+  // Calculate total from items if orderTotal not provided
+  const calculateTotalFromItems = (items: OrderItem[] | CartItemFromAPI[]): number => {
+    if (!items || items.length === 0) return 0
+    
+    if (items[0] && 'product' in items[0]) {
+      return (items as CartItemFromAPI[]).reduce((sum, item) => sum + item.subtotal, 0)
+    }
+    return (items as OrderItem[]).reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  }
+
+  // Calculate cart count from items
+  const calculateCartCount = (items: OrderItem[] | CartItemFromAPI[]): number => {
+    if (!items || items.length === 0) return 0
+    return items.reduce((sum, item) => sum + item.quantity, 0)
+  }
+
+  // Use orderItems if provided, otherwise use cartItems from context
+  const rawItems = (variant === "success" || useApiData) && orderItems ? orderItems : cartItems
+  const items = convertToOrderItems(rawItems)
+  
+  // Use orderTotal if provided, otherwise calculate from items or use context total
+  const displayTotal = orderTotal !== undefined 
+    ? orderTotal 
+    : (variant === "success" || useApiData) && orderItems
+    ? calculateTotalFromItems(orderItems)
+    : totalPrice
+
+  // Calculate cart count
+  const itemCount = (variant === "success" || useApiData) && orderItems
+    ? calculateCartCount(orderItems)
+    : cartCount
 
   const finalShippingCost = shippingCost !== undefined ? shippingCost : variant === "checkout" ? 5.99 : 0
   const finalTotal = variant === "success" ? displayTotal : displayTotal + finalShippingCost
@@ -92,7 +141,7 @@ export default function OrderSummary({
         <div className={variant === "checkout" ? "space-y-2 py-4 border-t border-border" : "space-y-2 py-4 border-t border-b border-border"}>
           <div className="flex justify-between text-sm">
             <span className={variant === "checkout" ? "" : "text-muted-foreground"}>
-              {variant === "checkout" ? "Subtotal" : `Subtotal (${cartCount} items)`}
+              {variant === "checkout" ? "Subtotal" : `Subtotal (${itemCount} ${itemCount === 1 ? "item" : "items"})`}
             </span>
             <span>${displayTotal.toFixed(2)}</span>
           </div>

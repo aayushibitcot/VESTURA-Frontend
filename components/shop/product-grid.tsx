@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import ProductCard from "@/components/ui/product-card"
 import { DEFAULT_PAGINATION, PRIVATE_PATH, SORT_OPTIONS } from "@/utils/constant"
@@ -23,7 +23,9 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
   const dispatch = useAppDispatch()
   const router = useRouter()
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  // Initialize selectedCategory from URL on mount
+  const initialCategory = searchParams.get('category')
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory)
   const [sortOrder, setSortOrder] = useState<string>("featured")
   const [sortedProducts, setSortedProducts] = useState<Product[]>(products)
   const [hasMore, setHasMore] = useState<boolean>(true)
@@ -31,33 +33,48 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
   const [totalCategoriesCount, setTotalCategoriesCount] = useState<number>(categories.length)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [pagination, setPagination] = useState<any>({ page: DEFAULT_PAGINATION.PAGE, limit: DEFAULT_PAGINATION.LIMIT })
-
-  // Initialize products when component mounts or products prop changes
-  useEffect(() => {
-    if (products && products.length > 0) {
-      setSortedProducts(products)
-      setTotalProductsCount(totalProducts)
-    }
-  }, [products, totalProducts])
+  // Use ref to track if we're filtering by category (to prevent products prop from resetting filtered state)
+  const isCategoryFiltered = useRef<boolean>(!!initialCategory)
 
   const handleCategoryChange = useCallback(async (category: string) => {
-    if (category === "all") {
-      const response = await fetchProducts(dispatch, { page: DEFAULT_PAGINATION.PAGE, limit: DEFAULT_PAGINATION.LIMIT })
-      if (response.success) {
-        setSortedProducts(response.data?.products || [])
-        setTotalProductsCount(response.data?.pagination?.total || totalProducts)
-        router.push(`${PRIVATE_PATH.SHOP}`)
+    setIsLoading(true)
+    try {
+      if (category === "all") {
+        isCategoryFiltered.current = false
+        const response = await fetchProducts(dispatch, { page: DEFAULT_PAGINATION.PAGE, limit: DEFAULT_PAGINATION.LIMIT })
+        if (response.success) {
+          setSortedProducts(response.data?.products || [])
+          setTotalProductsCount(response.data?.pagination?.total || totalProducts)
+          setSelectedCategory(null)
+          router.push(`${PRIVATE_PATH.SHOP}`)
+        }
+      } else {
+        isCategoryFiltered.current = true
+        const response = await fetchProductsByCategory(dispatch, category)
+        if (response.success) {
+          setSortedProducts(response.data.products || [])
+          setTotalCategoriesCount(response.data.products?.length || 0)
+          setSelectedCategory(category)
+          router.push(`${PRIVATE_PATH.SHOP}?category=${category}`)
+        }
       }
-    } else {
-      const response = await fetchProductsByCategory(dispatch, category)
-      if (response.success) {
-        setSortedProducts(response.data.products || [])
-        setTotalCategoriesCount(response.data.products?.length || 0)
-        router.push(`${PRIVATE_PATH.SHOP}?category=${category}`)
-      }
+    } finally {
+      setIsLoading(false)
     }
-    setSelectedCategory(category === "all" ? null : category)
-  }, [dispatch, totalProducts])
+  }, [dispatch, totalProducts, router])
+
+  // Initialize products when component mounts - only if no category is selected
+  useEffect(() => {
+    if (!initialCategory && products && products.length > 0) {
+      setSortedProducts(products)
+      setTotalProductsCount(totalProducts)
+      isCategoryFiltered.current = false
+    } else if (initialCategory && initialCategory !== selectedCategory) {
+      // If category is in URL on mount, fetch that category's products
+      isCategoryFiltered.current = true
+      handleCategoryChange(initialCategory)
+    }
+  }, []) // Only run on mount
 
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category')
@@ -66,13 +83,12 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
         handleCategoryChange(categoryFromUrl)
       }
     } else {
+      // Only reset to all products if category was previously selected
       if (selectedCategory !== null) {
-        setSelectedCategory(null)
-        setSortedProducts(products)
-        setTotalProductsCount(totalProducts)
+        handleCategoryChange("all")
       }
     }
-  }, [searchParams, handleCategoryChange, selectedCategory, products, totalProducts])
+  }, [searchParams]) // Only depend on searchParams - handleCategoryChange is stable
   
   const getFilteredproduct = async (pagination: any, append: boolean = false) => {
     const response = await fetchProducts(dispatch, pagination)
