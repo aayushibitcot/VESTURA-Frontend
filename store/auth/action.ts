@@ -32,7 +32,6 @@ export const signUp = async (userData: SignupFormType) => {
 export const signIn = async (credentials: SignInInput, dispatch: AppDispatch) => {
   try {
     const res = await post('/api/auth/signin', credentials);
-    
     if (!res.success) {
       return {
         message: res.message,

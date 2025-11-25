@@ -4,16 +4,23 @@ import { ProductsResponse } from "@/types/products";
 import { Category } from "@/types/categories";
 import { API_PATH } from "@/utils/constant";
 
-type Props = { searchParams: { category?: string } }
+type Props = { searchParams: Promise<{ category?: string }> }
 
 export default async function ShopPage({ searchParams }: Props) {
+  const params = await searchParams;
   
-  const response : any = await API.get<ProductsResponse>(API_PATH.PRODUCTS);
-
+  const response = await API.get<ProductsResponse>(API_PATH.PRODUCTS);
   const res = await API.get<Category[]>(API_PATH.CATEGORIES);
+  const productsData = response.success && response.data 
+    ? (response.data as ProductsResponse)
+    : { products: [], pagination: undefined };
   
-  return <Shop products={response?.data?.products || []} 
-    categories={res?.data || []} 
-    totalCount={response?.data?.pagination?.total || 0} 
+  const products = productsData.products || [];
+  const totalCount = productsData.pagination?.total || 0;
+  const categories = res.success && res.data ? (res.data as Category[]) : [];
+  
+  return <Shop products={products} 
+    categories={categories} 
+    totalCount={totalCount} 
   />
 }

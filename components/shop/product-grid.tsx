@@ -32,6 +32,14 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [pagination, setPagination] = useState<any>({ page: DEFAULT_PAGINATION.PAGE, limit: DEFAULT_PAGINATION.LIMIT })
 
+  // Initialize products when component mounts or products prop changes
+  useEffect(() => {
+    if (products && products.length > 0) {
+      setSortedProducts(products)
+      setTotalProductsCount(totalProducts)
+    }
+  }, [products, totalProducts])
+
   const handleCategoryChange = useCallback(async (category: string) => {
     if (category === "all") {
       const response = await fetchProducts(dispatch, { page: DEFAULT_PAGINATION.PAGE, limit: DEFAULT_PAGINATION.LIMIT })
@@ -61,9 +69,10 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
       if (selectedCategory !== null) {
         setSelectedCategory(null)
         setSortedProducts(products)
+        setTotalProductsCount(totalProducts)
       }
     }
-  }, [searchParams])
+  }, [searchParams, handleCategoryChange, selectedCategory, products, totalProducts])
   
   const getFilteredproduct = async (pagination: any, append: boolean = false) => {
     const response = await fetchProducts(dispatch, pagination)

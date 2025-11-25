@@ -1,6 +1,5 @@
 "use client"
 
-import { useCart } from "@/lib/cart-context"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -18,11 +17,50 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { PRIVATE_PATH } from "@/utils/constant"
+import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE, PUBLIC_PATH } from "@/utils/constant"
+import { clearCart } from "@/store/cart/action"
+import { useRouter } from "next/navigation"
+import { CartData, CartItemFromAPI } from "@/types/cart"
+import { useState } from "react"
 
-export default function Cart() {
-  const { cartItems, clearCart } = useCart()
+interface CartProps {
+  cartData?: CartData
+}
+
+export default function Cart({ cartData }: CartProps) {
   const { toast } = useToast()
+  const router = useRouter()
+  const [cartItems, setCartItems] = useState<CartItemFromAPI[]>(cartData?.items || [])
+
+  const handleClearCart = async () => {
+    const res = await clearCart()
+    
+    if (!res.success) {
+      if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
+        toast({
+          title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
+          description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
+          variant: "destructive",
+        })
+        router.push(PUBLIC_PATH.LOGIN)
+        return
+      }
+      
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.FAILED_TO_CLEAR_CART,
+        description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_CLEAR_CART,
+        variant: "destructive",
+      })
+      return
+    }
+
+    setCartItems([])
+
+    toast({
+      title: VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
+      description: res.message || VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
+    })
+  }
 
   if (!cartItems || cartItems.length === 0) {
     return (
@@ -51,7 +89,7 @@ export default function Cart() {
         <div className="flex justify-end">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <button className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                 Clear Cart
               </button>
             </AlertDialogTrigger>
@@ -65,13 +103,7 @@ export default function Cart() {
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={() => {
-                    clearCart()
-                    toast({
-                      title: "Cart cleared",
-                      description: "All items have been removed from your cart.",
-                    })
-                  }}
+                  onClick={handleClearCart}
                 >
                   Clear Cart
                 </AlertDialogAction>
@@ -82,7 +114,7 @@ export default function Cart() {
       </div>
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-8">
-        <CartItems />
+        <CartItems cartItems={cartItems} />
         <OrderSummary />
       </div>
     </div>

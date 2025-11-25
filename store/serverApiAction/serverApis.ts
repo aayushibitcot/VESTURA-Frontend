@@ -32,7 +32,6 @@ export const post = async <T = any>(url: string, body: object): Promise<ApiRespo
     const baseUrl = getApiBaseUrl();
     const fullUrl = `${baseUrl}${url}`;
     const headers = await getAuthHeaders();
-
     const response = await fetch(fullUrl, {
       method: 'POST',
       headers,
@@ -143,6 +142,51 @@ export const put = async <T = any>(url: string, body: object): Promise<ApiRespon
       method: 'PUT',
       headers,
       body: JSON.stringify(body),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      // Handle 401 Unauthorized specifically
+      if (response.status === 401) {
+        return {
+          success: false,
+          message: result.message || result.error || 'Authentication required',
+          error: 'UNAUTHORIZED',
+          data: result.data,
+        };
+      }
+      return {
+        success: false,
+        message: result.message || result.error || 'Request failed',
+        error: result.error || 'UNKNOWN_ERROR',
+        data: result.data,
+      };
+    }
+
+    return {
+      success: true,
+      message: result.message,
+      data: result.data || result,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Network error occurred',
+      error: 'NETWORK_ERROR',
+    };
+  }
+};
+
+export const del = async <T = any>(url: string): Promise<ApiResponse<T>> => {
+  try {
+    const baseUrl = getApiBaseUrl();
+    const fullUrl = `${baseUrl}${url}`;
+    const headers = await getAuthHeaders();
+
+    const response = await fetch(fullUrl, {
+      method: 'DELETE',
+      headers,
     });
 
     const result = await response.json();

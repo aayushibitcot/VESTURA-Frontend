@@ -1,55 +1,143 @@
 "use client"
 
-import { useCart } from "@/lib/cart-context"
 import Link from "next/link"
 import { Trash2, Plus, Minus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { PRIVATE_PATH } from "@/utils/constant"
+import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE, PUBLIC_PATH } from "@/utils/constant"
+import { fetchCart, removeCartItem } from "@/store/cart/action"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { CartItemFromAPI } from "@/types/cart"
 
-export default function CartItems({}) {
-  const { cartItems, updateQuantity, removeItem } = useCart()
+interface CartItemsProps {
+  cartItems?: CartItemFromAPI[]
+}
+
+export default function CartItems({ cartItems: cartItemsProp }: CartItemsProps) {
   const { toast } = useToast()
+  const router = useRouter()
+  const [cartItemsData, setCartItemsData] = useState<CartItemFromAPI[]>(cartItemsProp || [])
+  const [isLoading, setIsLoading] = useState(true)
 
-  if (!cartItems || cartItems.length === 0) {
+  useEffect(() => {
+    const fetchCartData = async () => {
+      setIsLoading(true)
+      const res = await fetchCart()
+      if (res.success && res.data) {
+        setCartItemsData(res.data.items || [])
+      } else {
+        if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
+          toast({
+            title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
+            description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
+            variant: "destructive",
+          })
+          router.push(PUBLIC_PATH.LOGIN)
+          setIsLoading(false)
+          return
+        }
+        toast({
+          title: VALIDATION_ERROR_MESSAGE.FAILED_TO_FETCH_CART,
+          description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_FETCH_CART,
+          variant: "destructive",
+        })
+      }
+      setIsLoading(false)
+    }
+    
+    // If cartItems prop is provided and has items, use it; otherwise fetch
+    if (cartItemsProp && cartItemsProp.length > 0) {
+      setCartItemsData(cartItemsProp)
+      setIsLoading(false)
+    } else {
+      fetchCartData()
+    }
+  }, [cartItemsProp, toast, router])
+
+  const handleRemoveItem = async (itemId: string) => {
+    const res = await removeCartItem(itemId)
+    
+    if (!res.success) {
+      if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
+        toast({
+          title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
+          description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
+          variant: "destructive",
+        })
+        router.push(PUBLIC_PATH.LOGIN)
+        return
+      }
+      
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.FAILED_TO_REMOVE_CART_ITEM,
+        description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_REMOVE_CART_ITEM,
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Remove item from local state
+    setCartItemsData(prev => prev.filter(cartItem => cartItem.id !== itemId))
+    
+    toast({
+      title: VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,
+      description: res.message || "Item has been removed from your cart.",
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <p className="text-muted-foreground">Loading cart items...</p>
+      </div>
+    )
+  }
+
+  if (!cartItemsData || cartItemsData.length === 0) {
     return null
   }
 
   return (
     <div className="space-y-4">
-      {cartItems.map((item) => {
-        const itemPrice = typeof item.price === "number" && !isNaN(item.price) ? item.price : 0
+      {cartItemsData.map((item) => {
+        const product = item.product
+        const itemPrice = typeof product.price === "number" && !isNaN(product.price) ? product.price : 0
 
         return (
-          <div key={item.sku} className="flex gap-4 border border-border p-4">
+          <div key={item.id} className="flex gap-4 border border-border p-4">
             <div className="relative w-24 h-24 flex-shrink-0 bg-secondary">
               <img
-                src={item.image || "/placeholder.svg?height=96&width=96"}
-                alt={item.name}
+                src={product.image || "/placeholder.svg?height=96&width=96"}
+                alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
 
             <div className="flex-1 min-w-0">
               <Link
-                href={`${PRIVATE_PATH.PRODUCT}/${item.sku}`}
+                href={`${PRIVATE_PATH.PRODUCT}/${product.sku}`}
                 className="font-medium hover:text-muted-foreground transition-colors"
               >
-                {item.name}
+                {product.name}
               </Link>
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+              {product.description && (
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
+              )}
+              {(item.selectedSize || item.selectedColor) && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  {item.selectedSize && <span>Size: {item.selectedSize}</span>}
+                  {item.selectedSize && item.selectedColor && <span className="mx-1">•</span>}
+                  {item.selectedColor && <span>Color: {item.selectedColor}</span>}
+                </div>
+              )}
               <p className="text-sm font-medium mt-2">${itemPrice.toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Subtotal: ${item.subtotal.toFixed(2)}</p>
             </div>
 
             <div className="flex flex-col items-end justify-between">
               <button
-                onClick={() => {
-                  removeItem(item.sku)
-                  toast({
-                    title: "Item removed",
-                    description: `${item.name} has been removed from your cart.`,
-                  })
-                }}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => handleRemoveItem(item.id)}
+                className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 aria-label="Remove item"
               >
                 <Trash2 className="h-4 w-4" />
@@ -57,8 +145,17 @@ export default function CartItems({}) {
 
               <div className="flex items-center border border-border">
                 <button
-                  onClick={() => updateQuantity(item.sku, item.quantity - 1)}
-                  className="px-3 py-1 hover:bg-accent transition-colors"
+                  onClick={() => {
+                    // TODO: Implement update quantity API
+                    setCartItemsData(prev => 
+                      prev.map(cartItem => 
+                        cartItem.id === item.id 
+                          ? { ...cartItem, quantity: Math.max(1, cartItem.quantity - 1) }
+                          : cartItem
+                      )
+                    )
+                  }}
+                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="h-3 w-3" />
@@ -67,8 +164,17 @@ export default function CartItems({}) {
                   {item.quantity}
                 </span>
                 <button
-                  onClick={() => updateQuantity(item.sku, item.quantity + 1)}
-                  className="px-3 py-1 hover:bg-accent transition-colors"
+                  onClick={() => {
+                    // TODO: Implement update quantity API
+                    setCartItemsData(prev => 
+                      prev.map(cartItem => 
+                        cartItem.id === item.id 
+                          ? { ...cartItem, quantity: cartItem.quantity + 1 }
+                          : cartItem
+                      )
+                    )
+                  }}
+                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer"
                   aria-label="Increase quantity"
                 >
                   <Plus className="h-3 w-3" />
@@ -80,5 +186,4 @@ export default function CartItems({}) {
       })}
     </div>
   )
-}
-
+} 

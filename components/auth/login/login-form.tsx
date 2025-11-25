@@ -47,11 +47,9 @@ export default function LoginForm() {
     
     if (validator.current.allValid()) {
       setIsLoading(true)
-
       const res = await signIn(form, dispatch)
-      
       if (res?.success) {
-        toast({
+        toast({ 
           description: res?.message || VALIDATION_ERROR_MESSAGE.LOGIN_SUCCESS_DESCRIPTION,
         })
         setTimeout(() => {
