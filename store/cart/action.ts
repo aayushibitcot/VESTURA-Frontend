@@ -1,6 +1,6 @@
 "use server";
 import { VALIDATION_ERROR_MESSAGE } from "@/utils/constant";
-import { get, post, del } from "../serverApiAction/serverApis";
+import { get, post, del, put } from "../serverApiAction/serverApis";
 import { API_PATH } from "@/utils/constant";
 import { cookies } from "next/headers";
 import { AddToCartParams } from "@/types/cart";
@@ -172,6 +172,56 @@ export const removeCartItem = async (itemId: string) => {
     }
     return {
       message: res.message || VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,
+      success: true,
+      data: res.data
+    };
+  } catch (error) {
+    return {
+      message: error instanceof Error ? error.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+      success: false,
+      error: 'UNEXPECTED_ERROR'
+    };
+  }
+}
+
+export const updateCartItemQuantity = async (itemId: string, quantity: number) => {
+  try {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      return {
+        message: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
+        success: false,
+        error: 'UNAUTHORIZED'
+      };
+    }
+
+    if (quantity < 1) {
+      return {
+        message: "Quantity must be at least 1",
+        success: false,
+        error: 'INVALID_QUANTITY'
+      };
+    }
+
+    const res = await put(`${API_PATH.ADD_TO_CART}/${itemId}`, { quantity });
+    
+    if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
+      return {
+        message: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
+        success: false,
+        error: 'UNAUTHORIZED'
+      };
+    }
+
+    if (!res.success) {
+      return {
+        message: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
+        success: false,
+        error: res.error
+      };
+    }
+    return {
+      message: res.message || VALIDATION_ERROR_MESSAGE.CART_ITEM_QUANTITY_UPDATED_SUCCESSFULLY,
       success: true,
       data: res.data
     };

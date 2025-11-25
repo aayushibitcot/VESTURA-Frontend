@@ -2,7 +2,7 @@
 
 import type { Product } from "@/types/products"
 import { Button } from "@/components/ui/button"
-import { useCart } from "@/lib/cart-context"
+import { useCart } from "@/lib/cart-provider"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
 import Link from "next/link"

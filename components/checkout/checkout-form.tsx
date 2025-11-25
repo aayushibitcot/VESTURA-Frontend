@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useCart } from "@/lib/cart-context"
+import { useCart } from "@/lib/cart-provider"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CreditCard } from "lucide-react"
@@ -102,7 +102,7 @@ export default function CheckoutForm() {
     try {
       const orderNumber = `ARD-${Math.floor(Math.random() * 1000)}`
       const shippingCost = 5.99
-      const finalTotal = totalPrice + shippingCost
+      const finalTotal = (totalPrice ?? 0) + shippingCost
 
       const orderDetails = {
         orderNumber,
@@ -141,7 +141,7 @@ export default function CheckoutForm() {
   }
 
   const shippingCost = 5.99
-  const finalTotal = totalPrice + shippingCost
+  const finalTotal = (totalPrice ?? 0) + shippingCost
 
   return (
     <form onSubmit={handleSubmit}>

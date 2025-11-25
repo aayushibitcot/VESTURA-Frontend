@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { useCart } from "@/lib/cart-context"
+import { useCart } from "@/lib/cart-provider"
 import CheckoutForm from "@/components/checkout/checkout-form"
 import Link from "next/link"
 import { useRouter } from "next/navigation"

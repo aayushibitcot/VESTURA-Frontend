@@ -67,6 +67,8 @@ export const VALIDATION_ERROR_MESSAGE = {
   CART_CLEARED_SUCCESSFULLY: "Cart cleared successfully",
   FAILED_TO_REMOVE_CART_ITEM: "Failed to remove item from cart",
   ITEM_REMOVED_FROM_CART_SUCCESSFULLY: "Item removed from cart successfully",
+  FAILED_TO_UPDATE_CART_ITEM_QUANTITY: "Failed to update cart item quantity",
+  CART_ITEM_QUANTITY_UPDATED_SUCCESSFULLY: "Cart item quantity updated successfully",
   AUTHENTICATION_REQUIRED: "Authentication required. Please login to continue.",
   UNAUTHORIZED_ACCESS: "Unauthorized access. Please login again.",
   PLEASE_SELECT_A_SIZE: "Please select a size",

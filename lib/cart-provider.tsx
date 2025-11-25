@@ -1,0 +1,223 @@
+"use client"
+
+import { CartProvider as ShoppingCartProvider, useShoppingCart } from "use-shopping-cart"
+import { Product } from "@/types/products"
+import { addToCart as addToCartAPI, fetchCart, clearCart as clearCartAPI, removeCartItem, updateCartItemQuantity as updateCartItemQuantityAPI } from "@/store/cart/action"
+import { useRouter } from "next/navigation"
+import { PRIVATE_PATH, PUBLIC_PATH } from "@/utils/constant"
+import { useEffect } from "react"
+
+interface CartProviderProps {
+  children: React.ReactNode
+}
+
+export default function CartProvider({ children }: CartProviderProps) {
+  return (
+    <ShoppingCartProvider
+      mode="payment"
+      cartMode="client-only"
+      stripe={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""}
+      currency="USD"
+      shouldPersist={false}
+      language="en-US"
+      successUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}${PRIVATE_PATH.ORDER_SUCCESS}`}
+      cancelUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}${PRIVATE_PATH.CART}`}
+    >
+      {children}
+    </ShoppingCartProvider>
+  )
+}
+
+// Custom hook to use cart with API integration
+export function useCart() {
+  const {
+    addItem: addItemToCart,
+    removeItem: removeItemFromCart,
+    clearCart: clearCartState,
+    cartCount,
+    totalPrice,
+    cartDetails,
+    setItemQuantity,
+  } = useShoppingCart()
+
+  const router = useRouter()
+
+  // Sync cart from API on mount
+  useEffect(() => {
+    const syncCartFromAPI = async () => {
+      try {
+        const res = await fetchCart()
+        if (res.success && res.data?.items && res.data.items.length > 0) {
+          // Clear current cart first
+          clearCartState()
+          
+          // Add all items from API to cart
+          res.data.items.forEach((item: any) => {
+            addItemToCart({
+              id: item.product.sku,
+              name: item.product.name,
+              description: item.product.description || "",
+              price: item.product.price,
+              currency: item.product.currency || "USD",
+              image: item.product.image,
+              product_data: {
+                selectedSize: item.selectedSize,
+                selectedColor: item.selectedColor,
+                category: item.product.category || "",
+              },
+            }, { count: item.quantity })
+          })
+        }
+      } catch (error) {
+        console.error("Error syncing cart from API:", error)
+      }
+    }
+    
+    syncCartFromAPI()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run on mount - clearCartState and addItemToCart are stable
+
+  // Convert cartDetails to array format compatible with existing code
+  const cartItems = Object.values(cartDetails || {}).map((item: any) => ({
+    sku: item.id,
+    name: item.name,
+    description: item.description,
+    price: item.price,
+    currency: item.currency || "USD",
+    image: item.image,
+    quantity: item.quantity,
+    selectedSize: item.product_data?.selectedSize,
+    selectedColor: item.product_data?.selectedColor,
+    inStock: true,
+    category: item.product_data?.category || "",
+  }))
+
+  // Add item with API integration
+  const addItem = async (product: Product & { quantity: number; selectedSize?: string; selectedColor?: string }) => {
+    try {
+      // Call API first
+      const res = await addToCartAPI({
+        productSku: product.sku,
+        quantity: product.quantity,
+        selectedSize: product.selectedSize,
+        selectedColor: product.selectedColor,
+      })
+
+      if (!res.success) {
+        if (res.error === 'UNAUTHORIZED') {
+          router.push(PUBLIC_PATH.LOGIN)
+          return
+        }
+        throw new Error(res.message || "Failed to add to cart")
+      }
+
+      // Add to local cart state (use-shopping-cart)
+      addItemToCart({
+        id: product.sku,
+        name: product.name,
+        description: product.description || "",
+        price: product.price,
+        currency: product.currency || "USD",
+        image: product.image,
+        product_data: {
+          selectedSize: product.selectedSize,
+          selectedColor: product.selectedColor,
+          category: product.category,
+        },
+      }, { count: product.quantity })
+    } catch (error) {
+      console.error("Error adding to cart:", error)
+      throw error
+    }
+  }
+
+  // Remove item with API integration
+  const removeItem = async (sku: string) => {
+    try {
+      // Find cart item ID from API cart
+      const cartRes = await fetchCart()
+      if (cartRes.success && cartRes.data?.items) {
+        const item = cartRes.data.items.find((item: any) => item.product.sku === sku)
+        if (item?.id) {
+          await removeCartItem(item.id)
+        }
+      }
+
+      // Remove from local cart state
+      removeItemFromCart(sku)
+    } catch (error) {
+      console.error("Error removing from cart:", error)
+      // Still remove from local state even if API fails
+      removeItemFromCart(sku)
+    }
+  }
+
+  // Update quantity
+  const updateQuantity = async (sku: string, quantity: number) => {
+    if (quantity <= 0) {
+      await removeItem(sku)
+      return
+    }
+
+    try {
+      // Find cart item ID from API cart
+      const cartRes = await fetchCart()
+      if (cartRes.success && cartRes.data?.items) {
+        const item = cartRes.data.items.find((item: any) => item.product.sku === sku)
+        if (item?.id) {
+          // Call API to update quantity
+          const res = await updateCartItemQuantityAPI(item.id, quantity)
+          if (res.success) {
+            // Update local state after successful API call
+            setItemQuantity(sku, quantity)
+          } else {
+            throw new Error(res.message || "Failed to update quantity")
+          }
+        } else {
+          // If item not found in API, just update local state
+          setItemQuantity(sku, quantity)
+        }
+      } else {
+        // If fetch fails, update local state anyway
+        setItemQuantity(sku, quantity)
+      }
+    } catch (error) {
+      console.error("Error updating quantity:", error)
+      // Still update local state even if API fails
+      setItemQuantity(sku, quantity)
+    }
+  }
+
+  // Clear cart with API integration
+  const clearCart = async () => {
+    try {
+      await clearCartAPI()
+      clearCartState()
+    } catch (error) {
+      console.error("Error clearing cart:", error)
+      // Still clear local state
+      clearCartState()
+    }
+  }
+
+  // Redirect to checkout
+  const redirectToCheckout = async () => {
+    if (cartCount === 0) {
+      alert("Your cart is empty")
+      return
+    }
+    router.push(PRIVATE_PATH.CHECKOUT)
+  }
+
+  return {
+    cartItems,
+    cartCount,
+    totalPrice,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    redirectToCheckout,
+  }
+}
+

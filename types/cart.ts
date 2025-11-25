@@ -1,9 +1,7 @@
-import { Product } from "./products";
-
 export interface AddToCartParams {
   productSku: string;
   quantity: number;
-  selectedSize?: string;
+  selectedSize?: string;  
   selectedColor?: string;
 }
 

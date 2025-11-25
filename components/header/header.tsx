@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCart } from "@/lib/cart-context"
+import { useCart } from "@/lib/cart-provider"
 import { useState } from "react"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import { appLogout } from "@/store/auth/action"
@@ -56,7 +56,7 @@ export default function Header({ categories }: { categories: Category[] }) {
             <HeaderDesktopView setMobileMenuOpen={setMobileMenuOpen} categories={categories} />
 
             <HeaderDropdown
-              cartCount={cartCount}
+              cartCount={cartCount ?? 0}
               mobileMenuOpen={mobileMenuOpen}
               setMobileMenuOpen={setMobileMenuOpen}
               dropdownOpen={dropdownOpen}

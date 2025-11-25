@@ -1,6 +1,6 @@
 "use client"
 
-import { useCart } from "@/lib/cart-context"
+import { useCart } from "@/lib/cart-provider"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { CartItemFromAPI } from "@/types/cart"
@@ -90,7 +90,7 @@ export default function OrderSummary({
     : cartCount
 
   const finalShippingCost = shippingCost !== undefined ? shippingCost : variant === "checkout" ? 5.99 : 0
-  const finalTotal = variant === "success" ? displayTotal : displayTotal + finalShippingCost
+  const finalTotal = variant === "success" ? displayTotal : (displayTotal || 0) + finalShippingCost
 
   const containerClass = variant === "checkout" 
     ? "bg-muted/30 border border-border p-6 sticky top-4"
@@ -143,7 +143,7 @@ export default function OrderSummary({
             <span className={variant === "checkout" ? "" : "text-muted-foreground"}>
               {variant === "checkout" ? "Subtotal" : `Subtotal (${itemCount} ${itemCount === 1 ? "item" : "items"})`}
             </span>
-            <span>${displayTotal.toFixed(2)}</span>
+            <span>${(displayTotal || 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className={variant === "checkout" ? "" : "text-muted-foreground"}>Shipping</span>
@@ -168,7 +168,7 @@ export default function OrderSummary({
           : "text-lg font-medium"
       }`}>
         <span className={variant === "checkout" || variant === "success" ? "uppercase tracking-wide" : ""}>TOTAL</span>
-        <span>${finalTotal.toFixed(2)}</span>
+        <span>${(finalTotal || 0).toFixed(2)}</span>
       </div>
 
       {variant === "checkout" && (

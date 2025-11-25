@@ -26,6 +26,7 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
   // Initialize selectedCategory from URL on mount
   const initialCategory = searchParams.get('category')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory)
+  const [urlCategory, setUrlCategory] = useState<string | null>(initialCategory)
   const [sortOrder, setSortOrder] = useState<string>("featured")
   const [sortedProducts, setSortedProducts] = useState<Product[]>(products)
   const [hasMore, setHasMore] = useState<boolean>(true)
@@ -35,8 +36,24 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
   const [pagination, setPagination] = useState<any>({ page: DEFAULT_PAGINATION.PAGE, limit: DEFAULT_PAGINATION.LIMIT })
   // Use ref to track if we're filtering by category (to prevent products prop from resetting filtered state)
   const isCategoryFiltered = useRef<boolean>(!!initialCategory)
+  // Use ref to prevent infinite loops - track if we're currently processing a category change
+  const isProcessingCategoryChange = useRef<boolean>(false)
+  // Track the last processed category to avoid duplicate calls
+  const lastProcessedCategory = useRef<string | null>(initialCategory)
 
-  const handleCategoryChange = useCallback(async (category: string) => {
+  const handleCategoryChange = useCallback(async (category: string, skipUrlUpdate = false) => {
+    // Prevent duplicate calls
+    if (isProcessingCategoryChange.current) {
+      return
+    }
+
+    // Check if this category is already selected
+    const targetCategory = category === "all" ? null : category
+    if (lastProcessedCategory.current === targetCategory) {
+      return
+    }
+
+    isProcessingCategoryChange.current = true
     setIsLoading(true)
     try {
       if (category === "all") {
@@ -46,7 +63,10 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
           setSortedProducts(response.data?.products || [])
           setTotalProductsCount(response.data?.pagination?.total || totalProducts)
           setSelectedCategory(null)
-          router.push(`${PRIVATE_PATH.SHOP}`)
+          lastProcessedCategory.current = null
+          if (!skipUrlUpdate) {
+            router.push(`${PRIVATE_PATH.SHOP}`)
+          }
         }
       } else {
         isCategoryFiltered.current = true
@@ -55,11 +75,18 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
           setSortedProducts(response.data.products || [])
           setTotalCategoriesCount(response.data.products?.length || 0)
           setSelectedCategory(category)
-          router.push(`${PRIVATE_PATH.SHOP}?category=${category}`)
+          lastProcessedCategory.current = category
+          if (!skipUrlUpdate) {
+            router.push(`${PRIVATE_PATH.SHOP}?category=${category}`)
+          }
         }
       }
     } finally {
       setIsLoading(false)
+      // Reset processing flag after a short delay to allow URL update to complete
+      setTimeout(() => {
+        isProcessingCategoryChange.current = false
+      }, 300)
     }
   }, [dispatch, totalProducts, router])
 
@@ -72,23 +99,48 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
     } else if (initialCategory && initialCategory !== selectedCategory) {
       // If category is in URL on mount, fetch that category's products
       isCategoryFiltered.current = true
-      handleCategoryChange(initialCategory)
+      lastProcessedCategory.current = initialCategory
+      handleCategoryChange(initialCategory, true)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Only run on mount
 
+  // Update urlCategory state when searchParams changes (but only if value actually changed)
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category')
-    if (categoryFromUrl) {
-      if (categoryFromUrl !== selectedCategory) {
-        handleCategoryChange(categoryFromUrl)
+    if (categoryFromUrl !== urlCategory) {
+      setUrlCategory(categoryFromUrl)
+    }
+  }, [searchParams, urlCategory])
+
+  // Handle URL category changes (only when urlCategory state changes)
+  useEffect(() => {
+    // Skip if we're already processing a category change
+    if (isProcessingCategoryChange.current) {
+      return
+    }
+
+    // Skip if this category was already processed
+    if (urlCategory === lastProcessedCategory.current) {
+      return
+    }
+
+    // Only handle URL changes that don't match current processed category (e.g., browser back/forward)
+    if (urlCategory) {
+      // Only fetch if this is a different category than what we last processed
+      if (urlCategory !== lastProcessedCategory.current) {
+        // Skip URL update since URL already matches - this is a browser navigation
+        handleCategoryChange(urlCategory, true)
       }
     } else {
-      // Only reset to all products if category was previously selected
-      if (selectedCategory !== null) {
-        handleCategoryChange("all")
+      // Only reset to all products if we had a category before
+      if (lastProcessedCategory.current !== null) {
+        // Skip URL update since URL already matches - this is a browser navigation
+        handleCategoryChange("all", true)
       }
     }
-  }, [searchParams]) // Only depend on searchParams - handleCategoryChange is stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlCategory]) // Only depend on urlCategory state, not searchParams object
   
   const getFilteredproduct = async (pagination: any, append: boolean = false) => {
     const response = await fetchProducts(dispatch, pagination)

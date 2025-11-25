@@ -126,11 +126,10 @@ export default function Cart({ cartData }: CartProps) {
       <div className="grid lg:grid-cols-[1fr_400px] gap-8">
         <CartItems 
           cartItems={cartItems} 
-          onItemsChange={(items) => {
+          onItemsChange={(items, total) => {
             setCartItems(items)
-            // Recalculate total from items subtotals
-            const newTotal = items.reduce((sum, item) => sum + (item.subtotal || 0), 0)
-            setCartTotal(newTotal)
+            // Use total from API if provided, otherwise calculate from items
+            setCartTotal(total !== undefined ? total : items.reduce((sum, item) => sum + (item.subtotal || 0), 0))
           }}
         />
         <OrderSummary 

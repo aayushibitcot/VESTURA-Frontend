@@ -4,14 +4,14 @@ import Link from "next/link"
 import { Trash2, Plus, Minus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE, PUBLIC_PATH } from "@/utils/constant"
-import { fetchCart, removeCartItem } from "@/store/cart/action"
+import { fetchCart, removeCartItem, updateCartItemQuantity } from "@/store/cart/action"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { CartItemFromAPI } from "@/types/cart"
 
 interface CartItemsProps {
   cartItems?: CartItemFromAPI[]
-  onItemsChange?: (items: CartItemFromAPI[]) => void
+  onItemsChange?: (items: CartItemFromAPI[], total?: number) => void
 }
 
 export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: CartItemsProps) {
@@ -27,9 +27,9 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
       if (res.success && res.data) {
         const fetchedItems = res.data.items || []
         setCartItemsData(fetchedItems)
-        // Notify parent of fetched items
+        // Notify parent of fetched items with total from API
         if (onItemsChange) {
-          onItemsChange(fetchedItems)
+          onItemsChange(fetchedItems, res.data.total)
         }
       } else {
         if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
@@ -60,10 +60,11 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
     }
   }, [cartItemsProp, toast, router])
 
-  // Notify parent when items change
+  // Notify parent when items change (calculate total from subtotals)
   useEffect(() => {
-    if (onItemsChange) {
-      onItemsChange(cartItemsData)
+    if (onItemsChange && cartItemsData.length > 0) {
+      const calculatedTotal = cartItemsData.reduce((sum, item) => sum + (item.subtotal || 0), 0)
+      onItemsChange(cartItemsData, calculatedTotal)
     }
   }, [cartItemsData, onItemsChange])
 
@@ -94,9 +95,9 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
     if (cartRes.success && cartRes.data) {
       const updatedItems = cartRes.data.items || []
       setCartItemsData(updatedItems)
-      // Notify parent of updated items
+      // Notify parent of updated items with total from API
       if (onItemsChange) {
-        onItemsChange(updatedItems)
+        onItemsChange(updatedItems, cartRes.data.total)
       }
     } else {
       // Fallback: Remove item from local state if fetch fails
@@ -110,6 +111,69 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
       title: VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,
       description: res.message || "Item has been removed from your cart.",
     })
+  }
+
+  const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
+    if (newQuantity < 1) {
+      return
+    }
+
+    const res = await updateCartItemQuantity(itemId, newQuantity)
+    
+    if (!res.success) {
+      if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
+        toast({
+          title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
+          description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
+          variant: "destructive",
+        })
+        router.push(PUBLIC_PATH.LOGIN)
+        return
+      }
+      
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
+        description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Fetch updated cart to get latest data including subtotal and total
+    const cartRes = await fetchCart()
+    if (cartRes.success && cartRes.data) {
+      const updatedItems = cartRes.data.items || []
+      setCartItemsData(updatedItems)
+      // Notify parent of updated items with total from API so Order Summary can recalculate
+      if (onItemsChange) {
+        onItemsChange(updatedItems, cartRes.data.total)
+      }
+    } else {
+      // Fallback: Update local state if fetch fails
+      setCartItemsData(prev => 
+        prev.map(cartItem => 
+          cartItem.id === itemId 
+            ? { 
+                ...cartItem, 
+                quantity: newQuantity,
+                subtotal: cartItem.product.price * newQuantity
+              }
+            : cartItem
+        )
+      )
+      if (onItemsChange) {
+        const updatedLocalItems = cartItemsData.map(cartItem => 
+          cartItem.id === itemId 
+            ? { 
+                ...cartItem, 
+                quantity: newQuantity,
+                subtotal: cartItem.product.price * newQuantity
+              }
+            : cartItem
+        )
+        onItemsChange(updatedLocalItems)
+      }
+    }
   }
 
   if (isLoading) {
@@ -173,17 +237,12 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
               <div className="flex items-center border border-border">
                 <button
                   onClick={() => {
-                    // TODO: Implement update quantity API
-                    setCartItemsData(prev => 
-                      prev.map(cartItem => 
-                        cartItem.id === item.id 
-                          ? { ...cartItem, quantity: Math.max(1, cartItem.quantity - 1) }
-                          : cartItem
-                      )
-                    )
+                    const newQuantity = Math.max(1, item.quantity - 1)
+                    handleUpdateQuantity(item.id, newQuantity)
                   }}
-                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer"
+                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Decrease quantity"
+                  disabled={item.quantity <= 1}
                 >
                   <Minus className="h-3 w-3" />
                 </button>
@@ -192,14 +251,8 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
                 </span>
                 <button
                   onClick={() => {
-                    // TODO: Implement update quantity API
-                    setCartItemsData(prev => 
-                      prev.map(cartItem => 
-                        cartItem.id === item.id 
-                          ? { ...cartItem, quantity: cartItem.quantity + 1 }
-                          : cartItem
-                      )
-                    )
+                    const newQuantity = item.quantity + 1
+                    handleUpdateQuantity(item.id, newQuantity)
                   }}
                   className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer"
                   aria-label="Increase quantity"
