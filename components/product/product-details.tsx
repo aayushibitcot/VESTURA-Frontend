@@ -7,16 +7,13 @@ import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
-import { PRIVATE_PATH, PUBLIC_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
-import { addToCart } from "@/store/cart/action"
-import { useRouter } from "next/navigation"
+import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
 
 interface ProductDetailsProps {
   product: Product
 }
 
 export default function ProductDetails({ product }: ProductDetailsProps) {
-  const router = useRouter()
   const { addItem } = useCart()
   const { toast } = useToast()
   const [quantity, setQuantity] = useState(1)
@@ -41,28 +38,8 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       })
       return
     }
-
-    const res = await addToCart({ productSku: product.sku, quantity: quantity, selectedSize: selectedSize, selectedColor: selectedColor });
-    if (!res.success) {
-      if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
-        toast({
-          title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
-          description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
-          variant: "destructive",
-        })
-        router.push(PUBLIC_PATH.LOGIN)
-        return
-      }
       
-      toast({
-        title: VALIDATION_ERROR_MESSAGE.FAILED_TO_ADD_TO_CART,
-        description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_ADD_TO_CART,
-        variant: "destructive",
-      })
-      return
-    }
-
-    addItem({
+    await addItem({
       ...product,
       quantity: quantity,
       selectedSize: selectedSize,
@@ -74,7 +51,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       description: `${quantity} × ${product.name}${selectedSize ? ` (Size: ${selectedSize})` : ""}${selectedColor ? `, ${selectedColor}` : ""} added to your cart.`,
     })
   }
-  
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Breadcrumb */}

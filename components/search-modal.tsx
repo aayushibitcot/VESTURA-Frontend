@@ -7,6 +7,7 @@ import Image from "next/image"
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog"
 import { fetchProducts } from "@/store/products/action"
 import { Product } from "@/types/products"
+import { useAppDispatch } from "@/store/hooks"
 
 interface SearchModalProps {
   open: boolean
@@ -15,7 +16,8 @@ interface SearchModalProps {
 
 export async function SearchModal({ open, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState("")
-  const { data: products, success } = await fetchProducts({ search: searchQuery })
+  const { data: products, success } = await fetchProducts(useAppDispatch(), { search: searchQuery })
+  const dispatch = useAppDispatch()
   const [searchResults, setSearchResults] = useState(products)
 
   useEffect(() => {

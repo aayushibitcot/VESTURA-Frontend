@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-provider"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { addToCart } from "@/store/cart/action"
-import { PUBLIC_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
+import { VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
 
 interface AddToCartModalProps {
   product: Product | null
@@ -19,7 +17,6 @@ interface AddToCartModalProps {
 export default function AddToCartModal({ product, open, onOpenChange }: AddToCartModalProps) {
   const { addItem } = useCart()
   const { toast } = useToast()
-  const router = useRouter()
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState<string>("")
   const [selectedColor, setSelectedColor] = useState<string>("")
@@ -52,28 +49,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
       return
     }
 
-    const res = await addToCart({ productSku: product.sku, quantity: quantity, selectedSize: selectedSize, selectedColor: selectedColor });
-    if (!res.success) {
-      if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
-        toast({
-          title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
-          description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
-          variant: "destructive",
-        })
-        handleOpenChange(false)
-        router.push(PUBLIC_PATH.LOGIN)
-        return
-      }
-      
-      toast({
-        title: VALIDATION_ERROR_MESSAGE.FAILED_TO_ADD_TO_CART,
-        description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_ADD_TO_CART,
-        variant: "destructive",
-      })
-      return
-    }
-
-    addItem({
+    await addItem({
       ...product,
       quantity: quantity,
       selectedSize: selectedSize,
