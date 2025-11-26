@@ -82,8 +82,8 @@ export default function CartProvider({ children }: CartProviderProps) {
       currency="USD"
       shouldPersist={true}
       language="en-US"
-      successUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}${PRIVATE_PATH.ORDER_SUCCESS}`}
-      cancelUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}${PRIVATE_PATH.CART}`}
+      successUrl={PRIVATE_PATH.ORDER_SUCCESS}
+      cancelUrl={PRIVATE_PATH.CART}
     >
       <CartInitializer />
       {children}
