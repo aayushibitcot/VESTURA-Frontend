@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { resetPassword } from "@/store/actions/authAction"
 import Link from "next/link"
 import { PUBLIC_PATH } from "@/utils/constant"
+import { resetPassword } from "@/store/auth/action"
 
 const defaultForm = {
   username: "",

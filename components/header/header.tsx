@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { useCart } from "@/lib/cart-provider"
 import { useState } from "react"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import { appLogout } from "@/store/auth/action"
@@ -11,15 +10,28 @@ import HeaderMobileView from "./header-mobile-view"
 import HeaderDropdown from "./header-dropdown"
 import HeaderDesktopView from "./header-desktop-view"
 import { Category } from "@/types/categories"
+import { CartItemFromAPI } from "@/types/cart"
 
-export default function Header({ categories }: { categories: Category[] }) {
-  const { cartCount } = useCart()
+interface HeaderProps {
+  categories: Category[]
+  cartItems?: CartItemFromAPI[]
+}
+
+export default function Header({ categories, cartItems }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { user } = useAppSelector((s) => s.auth)
   const dispatch = useAppDispatch()
   const router = useRouter()
+
+  // Calculate cart count from items (sum of quantities) - same logic as order-summary
+  const calculateCartCount = (items: CartItemFromAPI[]): number => {
+    if (!items || items.length === 0) return 0
+    return items.reduce((sum, item) => sum + item.quantity, 0)
+  }
+
+  const totalCartCount = calculateCartCount(cartItems || [])
 
   // Get user initials for avatar fallback
   const getUserInitials = () => {
@@ -56,7 +68,7 @@ export default function Header({ categories }: { categories: Category[] }) {
             <HeaderDesktopView setMobileMenuOpen={setMobileMenuOpen} categories={categories} />
 
             <HeaderDropdown
-              cartCount={cartCount ?? 0}
+              cartCount={totalCartCount}
               mobileMenuOpen={mobileMenuOpen}
               setMobileMenuOpen={setMobileMenuOpen}
               dropdownOpen={dropdownOpen}

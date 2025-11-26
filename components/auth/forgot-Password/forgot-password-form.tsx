@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { forgotPassword } from "@/store/actions/authAction"
+import { forgotPassword } from "@/store/auth/action"
 import Link from "next/link"
 
 const defaultForm = {

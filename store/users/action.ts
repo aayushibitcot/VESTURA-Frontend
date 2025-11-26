@@ -3,7 +3,7 @@
 import { AppDispatch } from "@/store/store";
 import * as userReducer from "./reducer";
 import * as authReducer from "../auth/reducer";
-import { put } from "../serverApiAction/serverApis";
+import { put } from "@/store/serverApiAction/serverApis";
 
 export interface UpdateUserProfileData {
   firstName: string;
