@@ -8,18 +8,34 @@ type Props = { searchParams: Promise<{ category?: string }> }
 
 export default async function ShopPage({ searchParams }: Props) {
   const params = await searchParams;
+  const category = params.category;
   
-  const response = await API.get<ProductsResponse>(API_PATH.PRODUCTS);
+  // Fetch categories
   const res = await API.get<Category[]>(API_PATH.CATEGORIES);
-  const productsData = response.success && response.data 
-    ? (response.data as ProductsResponse)
-    : { products: [], pagination: undefined };
-  
-  const products = productsData.products || [];
-  const totalCount = productsData.pagination?.total || 0;
   const categories = res.success && res.data ? (res.data as Category[]) : [];
   
-  return <Shop products={products} 
+  // Fetch products based on category
+  let products: ProductsResponse;
+  if (category) {
+    // Fetch products by category
+    const categoryResponse = await API.get<ProductsResponse>(
+      `${API_PATH.PRODUCTS_BY_CATEGORY}/${encodeURIComponent(category)}`
+    );
+    products = categoryResponse.success && categoryResponse.data 
+      ? (categoryResponse.data as ProductsResponse)
+      : { products: [], pagination: undefined };
+  } else {
+    // Fetch all products
+    const response = await API.get<ProductsResponse>(API_PATH.PRODUCTS);
+    products = response.success && response.data 
+      ? (response.data as ProductsResponse)
+      : { products: [], pagination: undefined };
+  }
+  
+  const productsList = products.products || [];
+  const totalCount = products.pagination?.total || 0;
+  
+  return <Shop products={productsList} 
     categories={categories} 
     totalCount={totalCount} 
   />

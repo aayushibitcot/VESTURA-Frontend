@@ -4,8 +4,6 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { PRIVATE_PATH } from "@/utils/constant"
 import { Category } from "@/types/categories"
-import { fetchProductsByCategory } from "@/store/categories/action"
-import { useAppDispatch } from "@/store/hooks"
 
 type HeaderDesktopViewProps = {
   setMobileMenuOpen?: (open: boolean) => void
@@ -14,10 +12,8 @@ type HeaderDesktopViewProps = {
 
 export default function HeaderDesktopView({ setMobileMenuOpen, categories }: HeaderDesktopViewProps) {
   const router = useRouter()
-  const dispatch = useAppDispatch()
 
-  const handleCategoryClick = async (categorySlug: string) => {
-    await fetchProductsByCategory(dispatch, categorySlug)
+  const handleCategoryClick = (categorySlug: string) => {
     router.push(`${PRIVATE_PATH.SHOP}?category=${categorySlug}`) 
   }
 
