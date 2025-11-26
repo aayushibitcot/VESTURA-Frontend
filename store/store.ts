@@ -3,6 +3,7 @@ import authReducer from "./auth/reducer";
 import userReducer from "./users/reducer";
 import categoriesReducer from "./categories/reducer";
 import productsReducer from "./products/reducer";
+import orderReducer from "./order/reducer";
 
 export const store = configureStore({
   reducer: {
@@ -10,8 +11,9 @@ export const store = configureStore({
     user: userReducer,
     categories: categoriesReducer,
     products: productsReducer,
+    order: orderReducer,
   },
-  middleware: (getDefaultMiddleware) =>
+  middleware: (getDefaultMiddleware: any) =>
     getDefaultMiddleware({
       serializableCheck: false,
     }),

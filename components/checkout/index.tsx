@@ -1,25 +1,42 @@
 "use client"
 
-import { useEffect } from "react"
 import { useCart } from "@/lib/cart-provider"
 import CheckoutForm from "@/components/checkout/checkout-form"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { SectionHeading } from "../ui/section-heading"
-import { PUBLIC_PATH } from "@/utils/constant"
+import { PRIVATE_PATH, PUBLIC_PATH } from "@/utils/constant"
+import { CreateOrderParams, OrderResponse } from "@/types/order"
+import { Button } from "@/components/ui/button"
 
-export default function Checkout() {
-  const { cartItems, cartCount } = useCart()
-  const router = useRouter()
+interface CheckoutProps {
+  onCreateOrder: (params: CreateOrderParams) => Promise<OrderResponse>
+}
 
-  useEffect(() => {
-    if (!cartItems || cartItems.length === 0) {
-      router.push("/cart")
-    }
-  }, [cartItems, router])
+export default function Checkout({ onCreateOrder }: CheckoutProps) {
+  const { cartItems } = useCart()
 
   if (!cartItems || cartItems.length === 0) {
-    return null
+    return (
+      <div className="min-h-screen flex flex-col">
+        <main className="flex-1 py-12 md:py-16">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <SectionHeading
+              title="Checkout"
+              description="Your cart is empty"
+              align="center"
+              className="mb-8"
+            />
+            <div className="text-center">
+              <Link href={PRIVATE_PATH.CART}>
+                <Button className="bg-foreground text-background hover:bg-foreground/90 mx-auto">
+                  View Cart
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   return (
@@ -36,7 +53,7 @@ export default function Checkout() {
               </Link>
             </div>
 
-            <CheckoutForm />
+            <CheckoutForm onCreateOrder={onCreateOrder} />
           </div>
         </div>
       </main>

@@ -75,6 +75,9 @@ export const VALIDATION_ERROR_MESSAGE = {
   PLEASE_SELECT_A_COLOR: "Please select a color",
   FAILED_TO_FETCH_PRODUCT: "Failed to fetch product",
   PRODUCT_FETCHED_SUCCESSFULLY: "Product fetched successfully",
+  FAILED_TO_CREATE_ORDER: "Failed to create order",
+  ORDER_CREATED_SUCCESSFULLY: "Order created successfully",
+  PLEASE_FILL_IN_ALL_REQUIRED_FIELDS_CORRECTLY: "Please fill in all required fields correctly.",
 };
 
 // Default pagination
@@ -100,6 +103,8 @@ export const  API_PATH = {
   PRODUCTS_BY_CATEGORY: "/api/products/category",
   CART: "/api/cart",
   ADD_TO_CART: "/api/cart/items",
+  ORDERS: "/api/orders",
+
 }
 
 export const CONTENTFUL_URL = 
