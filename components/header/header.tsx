@@ -10,28 +10,23 @@ import HeaderMobileView from "./header-mobile-view"
 import HeaderDropdown from "./header-dropdown"
 import HeaderDesktopView from "./header-desktop-view"
 import { Category } from "@/types/categories"
-import { CartItemFromAPI } from "@/types/cart"
+import { useCart } from "@/lib/cart-provider"
 
 interface HeaderProps {
   categories: Category[]
-  cartItems?: CartItemFromAPI[]
 }
 
-export default function Header({ categories, cartItems }: HeaderProps) {
+export default function Header({ categories }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { user } = useAppSelector((s) => s.auth)
   const dispatch = useAppDispatch()
   const router = useRouter()
-
-  // Calculate cart count from items (sum of quantities) - same logic as order-summary
-  const calculateCartCount = (items: CartItemFromAPI[]): number => {
-    if (!items || items.length === 0) return 0
-    return items.reduce((sum, item) => sum + item.quantity, 0)
-  }
-
-  const totalCartCount = calculateCartCount(cartItems || [])
+  
+  // Use use-shopping-cart library for real-time cart count updates
+  const { cartCount } = useCart()
+  const totalCartCount = cartCount || 0
 
   // Get user initials for avatar fallback
   const getUserInitials = () => {

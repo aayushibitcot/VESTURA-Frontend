@@ -18,10 +18,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE, PUBLIC_PATH } from "@/utils/constant"
-import { clearCart } from "@/store/cart/action"
 import { useRouter } from "next/navigation"
 import { CartData, CartItemFromAPI } from "@/types/cart"
 import { useState, useEffect } from "react"
+import { useCart } from "@/lib/cart-provider"
 
 interface CartProps {
   cartData?: CartData
@@ -30,14 +30,22 @@ interface CartProps {
 export default function Cart({ cartData }: CartProps) {
   const { toast } = useToast()
   const router = useRouter()
+  const { clearCart } = useCart()
   const [cartItems, setCartItems] = useState<CartItemFromAPI[]>(cartData?.items || [])
   const [cartTotal, setCartTotal] = useState<number>(cartData?.total || 0)
 
   const handleClearCart = async () => {
-    const res = await clearCart()
-    
-    if (!res.success) {
-      if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
+    try {
+      await clearCart()
+      setCartItems([])
+      setCartTotal(0)
+
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
+        description: VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
+      })
+    } catch (error: any) {
+      if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
           title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
           description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
@@ -49,19 +57,10 @@ export default function Cart({ cartData }: CartProps) {
       
       toast({
         title: VALIDATION_ERROR_MESSAGE.FAILED_TO_CLEAR_CART,
-        description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_CLEAR_CART,
+        description: error?.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_CLEAR_CART,
         variant: "destructive",
       })
-      return
     }
-
-    setCartItems([])
-    setCartTotal(0)
-
-    toast({
-      title: VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
-      description: res.message || VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
-    })
   }
 
   // Update cart items and total when cartData changes

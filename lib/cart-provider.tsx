@@ -18,7 +18,7 @@ export default function CartProvider({ children }: CartProviderProps) {
       cartMode="client-only"
       stripe={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""}
       currency="USD"
-      shouldPersist={false}
+      shouldPersist={true}
       language="en-US"
       successUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}${PRIVATE_PATH.ORDER_SUCCESS}`}
       cancelUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}${PRIVATE_PATH.CART}`}
@@ -42,16 +42,16 @@ export function useCart() {
 
   const router = useRouter()
 
-  // Sync cart from API on mount
-  useEffect(() => {
-    const syncCartFromAPI = async () => {
-      try {
-        const res = await fetchCart()
-        if (res.success && res.data?.items && res.data.items.length > 0) {
-          // Clear current cart first
-          clearCartState()
-          
-          // Add all items from API to cart
+  // Sync cart from API - can be called manually after operations
+  const syncCartFromAPI = async () => {
+    try {
+      const res = await fetchCart()
+      if (res.success && res.data?.items) {
+        // Clear current cart first
+        clearCartState()
+        
+        // Add all items from API to cart
+        if (res.data.items.length > 0) {
           res.data.items.forEach((item: any) => {
             addItemToCart({
               id: item.product.sku,
@@ -68,12 +68,20 @@ export function useCart() {
             }, { count: item.quantity })
           })
         }
-      } catch (error) {
-        console.error("Error syncing cart from API:", error)
       }
+    } catch (error) {
+      console.error("Error syncing cart from API:", error)
+    }
+  }
+
+  // Sync cart from API on mount and ensure persistence
+  useEffect(() => {
+    const initializeCart = async () => {
+      // First, sync from API to get the latest cart state
+      await syncCartFromAPI()
     }
     
-    syncCartFromAPI()
+    initializeCart()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Only run on mount - clearCartState and addItemToCart are stable
 
@@ -111,20 +119,8 @@ export function useCart() {
         throw new Error(res.message || "Failed to add to cart")
       }
 
-      // Add to local cart state (use-shopping-cart)
-      addItemToCart({
-        id: product.sku,
-        name: product.name,
-        description: product.description || "",
-        price: product.price,
-        currency: product.currency || "USD",
-        image: product.image,
-        product_data: {
-          selectedSize: product.selectedSize,
-          selectedColor: product.selectedColor,
-          category: product.category,
-        },
-      }, { count: product.quantity })
+      // Sync cart from API to ensure accurate count and state
+      await syncCartFromAPI()
     } catch (error) {
       console.error("Error adding to cart:", error)
       throw error
@@ -140,15 +136,29 @@ export function useCart() {
         const item = cartRes.data.items.find((item: any) => item.product.sku === sku)
         if (item?.id) {
           await removeCartItem(item.id)
+          // Sync cart from API after successful removal
+          await syncCartFromAPI()
         }
+      } else {
+        // If fetch fails, still try to remove from local state
+        removeItemFromCart(sku)
       }
-
-      // Remove from local cart state
-      removeItemFromCart(sku)
     } catch (error) {
       console.error("Error removing from cart:", error)
       // Still remove from local state even if API fails
       removeItemFromCart(sku)
+    }
+  }
+
+  // Remove item by ID (for cart-items component)
+  const removeItemById = async (itemId: string) => {
+    try {
+      await removeCartItem(itemId)
+      // Sync cart from API after successful removal
+      await syncCartFromAPI()
+    } catch (error) {
+      console.error("Error removing item by ID:", error)
+      throw error
     }
   }
 
@@ -168,8 +178,8 @@ export function useCart() {
           // Call API to update quantity
           const res = await updateCartItemQuantityAPI(item.id, quantity)
           if (res.success) {
-            // Update local state after successful API call
-            setItemQuantity(sku, quantity)
+            // Sync cart from API after successful update
+            await syncCartFromAPI()
           } else {
             throw new Error(res.message || "Failed to update quantity")
           }
@@ -185,6 +195,27 @@ export function useCart() {
       console.error("Error updating quantity:", error)
       // Still update local state even if API fails
       setItemQuantity(sku, quantity)
+    }
+  }
+
+  // Update quantity by item ID (for cart-items component)
+  const updateQuantityById = async (itemId: string, quantity: number) => {
+    if (quantity < 1) {
+      await removeItemById(itemId)
+      return
+    }
+
+    try {
+      const res = await updateCartItemQuantityAPI(itemId, quantity)
+      if (res.success) {
+        // Sync cart from API after successful update
+        await syncCartFromAPI()
+      } else {
+        throw new Error(res.message || "Failed to update quantity")
+      }
+    } catch (error) {
+      console.error("Error updating quantity by ID:", error)
+      throw error
     }
   }
 
@@ -215,9 +246,12 @@ export function useCart() {
     totalPrice,
     addItem,
     removeItem,
+    removeItemById,
     updateQuantity,
+    updateQuantityById,
     clearCart,
     redirectToCheckout,
+    syncCartFromAPI,
   }
 }
 

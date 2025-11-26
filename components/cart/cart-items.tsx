@@ -4,10 +4,11 @@ import Link from "next/link"
 import { Trash2, Plus, Minus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE, PUBLIC_PATH } from "@/utils/constant"
-import { fetchCart, removeCartItem, updateCartItemQuantity } from "@/store/cart/action"
+import { fetchCart } from "@/store/cart/action"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { CartItemFromAPI } from "@/types/cart"
+import { useCart } from "@/lib/cart-provider"
 
 interface CartItemsProps {
   cartItems?: CartItemFromAPI[]
@@ -17,6 +18,7 @@ interface CartItemsProps {
 export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: CartItemsProps) {
   const { toast } = useToast()
   const router = useRouter()
+  const { removeItemById, updateQuantityById, syncCartFromAPI } = useCart()
   const [cartItemsData, setCartItemsData] = useState<CartItemFromAPI[]>(cartItemsProp || [])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -69,10 +71,32 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
   }, [cartItemsData, onItemsChange])
 
   const handleRemoveItem = async (itemId: string) => {
-    const res = await removeCartItem(itemId)
-    
-    if (!res.success) {
-      if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
+    try {
+      await removeItemById(itemId)
+      
+      // Fetch updated cart to get latest data including total
+      const cartRes = await fetchCart()
+      if (cartRes.success && cartRes.data) {
+        const updatedItems = cartRes.data.items || []
+        setCartItemsData(updatedItems)
+        // Notify parent of updated items with total from API
+        if (onItemsChange) {
+          onItemsChange(updatedItems, cartRes.data.total)
+        }
+      } else {
+        // Fallback: Remove item from local state if fetch fails
+        setCartItemsData(prev => prev.filter(cartItem => cartItem.id !== itemId))
+        if (onItemsChange) {
+          onItemsChange(cartItemsData.filter(cartItem => cartItem.id !== itemId))
+        }
+      }
+      
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,
+        description: "Item has been removed from your cart.",
+      })
+    } catch (error: any) {
+      if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
           title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
           description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
@@ -84,33 +108,10 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
       
       toast({
         title: VALIDATION_ERROR_MESSAGE.FAILED_TO_REMOVE_CART_ITEM,
-        description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_REMOVE_CART_ITEM,
+        description: error?.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_REMOVE_CART_ITEM,
         variant: "destructive",
       })
-      return
     }
-
-    // Fetch updated cart to get latest data including total
-    const cartRes = await fetchCart()
-    if (cartRes.success && cartRes.data) {
-      const updatedItems = cartRes.data.items || []
-      setCartItemsData(updatedItems)
-      // Notify parent of updated items with total from API
-      if (onItemsChange) {
-        onItemsChange(updatedItems, cartRes.data.total)
-      }
-    } else {
-      // Fallback: Remove item from local state if fetch fails
-      setCartItemsData(prev => prev.filter(cartItem => cartItem.id !== itemId))
-      if (onItemsChange) {
-        onItemsChange(cartItemsData.filter(cartItem => cartItem.id !== itemId))
-      }
-    }
-    
-    toast({
-      title: VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,
-      description: res.message || "Item has been removed from your cart.",
-    })
   }
 
   const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
@@ -118,10 +119,46 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
       return
     }
 
-    const res = await updateCartItemQuantity(itemId, newQuantity)
-    
-    if (!res.success) {
-      if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
+    try {
+      await updateQuantityById(itemId, newQuantity)
+
+      // Fetch updated cart to get latest data including subtotal and total
+      const cartRes = await fetchCart()
+      if (cartRes.success && cartRes.data) {
+        const updatedItems = cartRes.data.items || []
+        setCartItemsData(updatedItems)
+        // Notify parent of updated items with total from API so Order Summary can recalculate
+        if (onItemsChange) {
+          onItemsChange(updatedItems, cartRes.data.total)
+        }
+      } else {
+        // Fallback: Update local state if fetch fails
+        setCartItemsData(prev => 
+          prev.map(cartItem => 
+            cartItem.id === itemId 
+              ? { 
+                  ...cartItem, 
+                  quantity: newQuantity,
+                  subtotal: cartItem.product.price * newQuantity
+                }
+              : cartItem
+          )
+        )
+        if (onItemsChange) {
+          const updatedLocalItems = cartItemsData.map(cartItem => 
+            cartItem.id === itemId 
+              ? { 
+                  ...cartItem, 
+                  quantity: newQuantity,
+                  subtotal: cartItem.product.price * newQuantity
+                }
+              : cartItem
+          )
+          onItemsChange(updatedLocalItems)
+        }
+      }
+    } catch (error: any) {
+      if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
           title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
           description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
@@ -133,46 +170,9 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
       
       toast({
         title: VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
-        description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
+        description: error?.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
         variant: "destructive",
       })
-      return
-    }
-
-    // Fetch updated cart to get latest data including subtotal and total
-    const cartRes = await fetchCart()
-    if (cartRes.success && cartRes.data) {
-      const updatedItems = cartRes.data.items || []
-      setCartItemsData(updatedItems)
-      // Notify parent of updated items with total from API so Order Summary can recalculate
-      if (onItemsChange) {
-        onItemsChange(updatedItems, cartRes.data.total)
-      }
-    } else {
-      // Fallback: Update local state if fetch fails
-      setCartItemsData(prev => 
-        prev.map(cartItem => 
-          cartItem.id === itemId 
-            ? { 
-                ...cartItem, 
-                quantity: newQuantity,
-                subtotal: cartItem.product.price * newQuantity
-              }
-            : cartItem
-        )
-      )
-      if (onItemsChange) {
-        const updatedLocalItems = cartItemsData.map(cartItem => 
-          cartItem.id === itemId 
-            ? { 
-                ...cartItem, 
-                quantity: newQuantity,
-                subtotal: cartItem.product.price * newQuantity
-              }
-            : cartItem
-        )
-        onItemsChange(updatedLocalItems)
-      }
     }
   }
 
