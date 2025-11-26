@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -13,46 +12,21 @@ interface OrderItem {
   price: number
   quantity: number
   image: string
+  sku?: string
+  selectedSize?: string
+  selectedColor?: string
 }
 
-export default function OrderSuccess() {
-  const [orderDetails, setOrderDetails] = useState<{
+interface OrderSuccessProps {
+  orderDetails: {
     orderNumber: string
     items: OrderItem[]
     total: number
-  } | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    try {
-      const storedOrder = sessionStorage.getItem("lastOrder")
-
-      if (storedOrder && storedOrder !== "undefined" && storedOrder !== "null") {
-        const parsed = JSON.parse(storedOrder)
-        setOrderDetails(parsed)
-        // Clear after retrieving
-        sessionStorage.removeItem("lastOrder")
-      }
-    } catch (error) {
-      console.error("Error loading order:", error)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  // Generate random order number if none exists
-  const orderNumber = orderDetails?.orderNumber || `ARD-${Math.floor(Math.random() * 1000)}`
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-          <p className="mt-4 text-muted-foreground">Loading order details...</p>
-        </div>
-      </div>
-    )
   }
+}
+
+export default function OrderSuccess({ orderDetails }: OrderSuccessProps) {
+  const orderNumber = orderDetails?.orderNumber || `ARD-${Math.floor(Math.random() * 1000)}`
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -69,12 +43,13 @@ export default function OrderSuccess() {
           </div>
 
           {/* Order Summary */}
-          {orderDetails && orderDetails.items.length > 0 && (
+          {orderDetails && orderDetails.items && orderDetails.items.length > 0 && (
             <OrderSummary
               variant="success"
               showItems={true}
               orderItems={orderDetails.items}
               orderTotal={orderDetails.total}
+              useApiData={true}
             />
           )}
 

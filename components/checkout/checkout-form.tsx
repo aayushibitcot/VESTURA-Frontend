@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useCart } from "@/lib/cart-provider"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,7 +9,13 @@ import { CreditCard } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import OrderSummary from "@/components/ui/order-summary"
-import { PRIVATE_PATH } from "@/utils/constant"
+import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
+import { CreateOrderParams, OrderResponse } from "@/types/order"
+import SimpleReactValidator from "simple-react-validator"
+
+interface CheckoutFormProps {
+  onCreateOrder: (form: CreateOrderParams) => Promise<OrderResponse>
+}
 
 const defaultForm = {
   firstName: "",
@@ -30,120 +36,110 @@ const defaultForm = {
 
 type FormType = typeof defaultForm
 
-export default function CheckoutForm() {
+export default function CheckoutForm({ onCreateOrder }: CheckoutFormProps) {
   const [form, setForm] = useState<FormType>(defaultForm)
-  const [errors, setErrors] = useState<Partial<FormType>>({})
   const { cartItems, totalPrice, clearCart } = useCart()
   const { toast } = useToast()
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(false)
+  const [, forceUpdate] = useState(0)
 
-  // const validate = () => {
-  //   const newErrors: Partial<FormType> = {}
-  //   if (!form.firstName.trim()) {
-  //     newErrors.firstName = "First name is required"
-  //   }
-  //   if (!form.lastName.trim()) {
-  //     newErrors.lastName = "Last name is required"
-  //   }
-  //   if (!form.email.trim()) {
-  //     newErrors.email = "Email is required"
-  //   }
-  //   if (!form.phone.trim()) {
-  //     newErrors.phone = "Phone number is required"
-  //   }
-  //   if (!form.streetAddress.trim()) {
-  //     newErrors.streetAddress = "Street address is required"
-  //   }
-  //   if (!form.city.trim()) {
-  //     newErrors.city = "City is required"
-  //   }
-  //   if (!form.state.trim()) {
-  //     newErrors.state = "State is required"
-  //   }
-  //   if (!form.zipCode.trim()) {
-  //     newErrors.zipCode = "Zip code is required"
-  //   }
-  //   if (!form.country.trim()) {
-  //     newErrors.country = "Country is required"
-  //   }
-  //   if (!form.couponCode.trim()) {
-  //     newErrors.couponCode = "Coupon code is required"
-  //   }
-  //   if (!form.cardholderName.trim()) {
-  //     newErrors.cardholderName = "Card holder name is required"
-  //   }
-  //   if (!form.cardNumber.trim()) {
-  //     newErrors.cardNumber = "Card number is required"
-  //   }
-  //   if (!form.expiryDate.trim()) {
-  //     newErrors.expiryDate = "Expiry date is required"
-  //   }
-  //   if (!form.cvv.trim()) {
-  //     newErrors.cvv = "CVV is required"
-  //   }
-  //   setErrors(newErrors)
-  //   return Object.keys(newErrors).length === 0
-  // }
+  const validator = useRef(
+    new SimpleReactValidator({
+      autoForceUpdate: { forceUpdate },
+      messages: {
+        required: ":attribute" + VALIDATION_ERROR_MESSAGE.REQUIRED,
+        email: ":attribute" + VALIDATION_ERROR_MESSAGE.INVALID_EMAIL,
+        phone: ":attribute" + VALIDATION_ERROR_MESSAGE.INVALID_PHONE,
+      },
+    })
+  )
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setForm({ ...form, [name]: value })
+    validator.current.showMessageFor(name)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // const error = validate()
-    // if (error) {
-    //   toast({
-    //     title: "Validation error",
-    //     description: error,
-    //     variant: "destructive",
-    //   })
-    //   return
-    // }
-    setIsProcessing(true)
-
-    try {
-      const orderNumber = `ARD-${Math.floor(Math.random() * 1000)}`
-      const shippingCost = 5.99
-      const finalTotal = (totalPrice ?? 0) + shippingCost
-
-      const orderDetails = {
-        orderNumber,
-        items: cartItems.map((item) => ({
-          name: item.name,
-          price: item.price,
+    
+    if (validator.current.allValid()) {
+      setIsProcessing(true)
+      
+      try {
+        const orderItems = cartItems.map(item => ({
+          productSku: item.sku,
           quantity: item.quantity,
-          image: item.image,
-        })),
-        total: finalTotal,
+          selectedSize: item.selectedSize,
+          selectedColor: item.selectedColor,
+        }))
+
+        const orderParams: CreateOrderParams = {
+          items: orderItems,
+          shippingAddress: {
+            firstName: form.firstName,
+            lastName: form.lastName,
+            address: form.streetAddress,
+            city: form.city,
+            state: form.state,
+            zip: form.zipCode,
+            country: form.country,
+            phone: form.phone,
+          },
+          billingAddress: {
+            firstName: form.firstName,
+            lastName: form.lastName,
+            address: form.streetAddress,
+            city: form.city,
+            state: form.state,
+            zip: form.zipCode,
+            country: form.country,
+          },
+          paymentMethod: "stripe",
+          couponCode: form.couponCode || undefined,
+        }
+
+        const response = await onCreateOrder(orderParams)
+        if (response.success && response.data && response.data.id) {
+          toast({
+            title: VALIDATION_ERROR_MESSAGE.ORDER_CREATED_SUCCESSFULLY,
+            description: response.message,
+          })
+          clearCart()
+          setTimeout(() => {
+            router.push(`${PRIVATE_PATH.ORDER_SUCCESS}?orderId=${response?.data?.id}`)
+          }, 1000)
+        } else {
+          toast({
+            title: VALIDATION_ERROR_MESSAGE.FAILED_TO_CREATE_ORDER,
+            description: response.message || VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        toast({
+          title: VALIDATION_ERROR_MESSAGE.FAILED_TO_CREATE_ORDER,
+          description: error instanceof Error ? error.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+          variant: "destructive",
+        })
+      } finally {
+        setIsProcessing(false)
       }
-
-      sessionStorage.setItem("lastOrder", JSON.stringify(orderDetails))
-
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
+    } else {
+      validator.current.showMessages()
+      forceUpdate((prev) => prev + 1)
       toast({
-        title: "Order placed successfully!",
-        description: "Redirecting to confirmation page...",
-      })
-
-      clearCart()
-
-      setTimeout(() => {
-        window.location.href = PRIVATE_PATH.ORDER_SUCCESS
-      }, 100)
-    } catch (error) {
-      console.error("Checkout error:", error)
-      toast({
+        title: VALIDATION_ERROR_MESSAGE.PLEASE_FILL_IN_ALL_REQUIRED_FIELDS_CORRECTLY,
         variant: "destructive",
-        title: "Checkout failed",
-        description: "There was an error processing your checkout. Please try again.",
       })
-      setIsProcessing(false)
     }
   }
 
   const shippingCost = 5.99
   const finalTotal = (totalPrice ?? 0) + shippingCost
 
-  return (
+  return (  
     <form onSubmit={handleSubmit}>
       <div className="grid lg:grid-cols-[1fr_400px] gap-8">
         {/* Left Column - Forms */}
@@ -161,13 +157,10 @@ export default function CheckoutForm() {
                     id="firstName"
                     name="firstName"
                     value={form.firstName}
-                    onChange={(e) => {
-                      setForm({ ...form, firstName: e.target.value })
-                      setErrors({ ...errors, firstName: "" })  // clear first name error
-                    }}   
+                    onChange={handleChange}
                     className="mt-1"
                   />
-                  {errors.firstName && <p className="text-sm text-red-500">{errors.firstName}</p>}
+                  {validator.current.message("firstName", form.firstName, "required", { className: "text-sm text-destructive mt-1", attribute: "first name" })}
                 </div>
                 <div>
                   <Label htmlFor="lastName" className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -177,13 +170,10 @@ export default function CheckoutForm() {
                     id="lastName"
                     name="lastName"
                     value={form.lastName}
-                    onChange={(e) => {
-                      setForm({ ...form, lastName: e.target.value })
-                      setErrors({ ...errors, lastName: "" })  // clear last name error
-                    }}
+                    onChange={handleChange}
                     className="mt-1"
                   />
-                  {errors.lastName && <p className="text-sm text-red-500">{errors.lastName}</p>}
+                  {validator.current.message("lastName", form.lastName, "required", { className: "text-sm text-destructive mt-1", attribute: "last name" })}
                 </div>
               </div>
 
@@ -197,13 +187,10 @@ export default function CheckoutForm() {
                     name="email"
                     type="email"
                     value={form.email}
-                    onChange={(e) => {
-                      setForm({ ...form, email: e.target.value })
-                      setErrors({ ...errors, email: "" })  // clear email error
-                    }}
+                    onChange={handleChange}
                     className="mt-1"
                   />
-                  {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+                  {validator.current.message("email", form.email, "required|email", { className: "text-sm text-destructive mt-1", attribute: "email" })}
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -214,13 +201,10 @@ export default function CheckoutForm() {
                     name="phone"
                     type="tel"
                     value={form.phone}
-                    onChange={(e) => {
-                      setForm({ ...form, phone: e.target.value })
-                      setErrors({ ...errors, phone: "" })  // clear phone error
-                    }}
+                    onChange={handleChange}
                     className="mt-1"
                   />
-                  {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+                  {validator.current.message("phone", form.phone, "required|phone", { className: "text-sm text-destructive mt-1", attribute: "phone" })}
                 </div>
               </div>
             </div>
@@ -238,13 +222,10 @@ export default function CheckoutForm() {
                   id="streetAddress"
                   name="streetAddress"
                   value={form.streetAddress}
-                  onChange={(e) => {
-                    setForm({ ...form, streetAddress: e.target.value })
-                    setErrors({ ...errors, streetAddress: "" })  // clear street address error
-                  }}
+                  onChange={handleChange}
                   className="mt-1"
                 />
-                {errors.streetAddress && <p className="text-sm text-red-500">{errors.streetAddress}</p>}
+                {validator.current.message("streetAddress", form.streetAddress, "required", { className: "text-sm text-destructive mt-1", attribute: "street address" })}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -256,13 +237,10 @@ export default function CheckoutForm() {
                     id="city"
                     name="city"
                     value={form.city}
-                    onChange={(e) => {
-                      setForm({ ...form, city: e.target.value })
-                      setErrors({ ...errors, city: "" })  // clear city error
-                    }}
+                    onChange={handleChange}
                     className="mt-1"
                   />
-                  {errors.city && <p className="text-sm text-red-500">{errors.city}</p>}
+                  {validator.current.message("city", form.city, "required", { className: "text-sm text-destructive mt-1", attribute: "city" })}
                 </div>
                 <div>
                   <Label htmlFor="state" className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -272,13 +250,10 @@ export default function CheckoutForm() {
                     id="state"
                     name="state"
                     value={form.state}
-                    onChange={(e) => {
-                      setForm({ ...form, state: e.target.value })
-                      setErrors({ ...errors, state: "" })  // clear state error
-                    }}
+                    onChange={handleChange}
                     className="mt-1"
                   />
-                  {errors.state && <p className="text-sm text-red-500">{errors.state}</p>}
+                  {validator.current.message("state", form.state, "required", { className: "text-sm text-destructive mt-1", attribute: "state" })}
                 </div>
               </div>
 
@@ -291,13 +266,10 @@ export default function CheckoutForm() {
                     id="zipCode"
                     name="zipCode"
                     value={form.zipCode}
-                    onChange={(e) => {
-                      setForm({ ...form, zipCode: e.target.value })
-                      setErrors({ ...errors, zipCode: "" })  // clear zip code error
-                    }}
+                    onChange={handleChange}
                     className="mt-1"
                   />
-                  {errors.zipCode && <p className="text-sm text-red-500">{errors.zipCode}</p>}
+                  {validator.current.message("zipCode", form.zipCode, "required", { className: "text-sm text-destructive mt-1", attribute: "zip code" })}
                 </div>
                 <div>
                   <Label htmlFor="country" className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -307,13 +279,10 @@ export default function CheckoutForm() {
                     id="country"
                     name="country"
                     value={form.country}
-                    onChange={(e) => {
-                      setForm({ ...form, country: e.target.value })
-                      setErrors({ ...errors, country: "" })  // clear country error
-                    }}
+                    onChange={handleChange}
                     className="mt-1"
                   />
-                  {errors.country && <p className="text-sm text-red-500">{errors.country}</p>}
+                  {validator.current.message("country", form.country, "required", { className: "text-sm text-destructive mt-1", attribute: "country" })}
                 </div>
               </div>
             </div>
@@ -330,14 +299,10 @@ export default function CheckoutForm() {
                 id="couponCode"
                 name="couponCode"
                 value={form.couponCode}
-                onChange={(e) => {
-                  setForm({ ...form, couponCode: e.target.value })
-                  setErrors({ ...errors, couponCode: "" })  // clear coupon code error
-                }}
+                onChange={handleChange}
                 placeholder="Enter code"
                 className="mt-1"
               />
-              {errors.couponCode && <p className="text-sm text-red-500">{errors.couponCode}</p>}
             </div>
           </div>
 
@@ -353,13 +318,10 @@ export default function CheckoutForm() {
                   id="cardholderName"
                   name="cardholderName"
                   value={form.cardholderName}
-                  onChange={(e) => {
-                    setForm({ ...form, cardholderName: e.target.value })
-                    setErrors({ ...errors, cardholderName: "" })  // clear card holder name error
-                  }}
+                  onChange={handleChange}
                   className="mt-1"
                 />
-                {errors.cardholderName && <p className="text-sm text-red-500">{errors.cardholderName}</p>}
+                {validator.current.message("cardholderName", form.cardholderName, "required", { className: "text-sm text-destructive mt-1", attribute: "cardholder name" })}
               </div>
 
               <div>
@@ -371,16 +333,13 @@ export default function CheckoutForm() {
                     id="cardNumber"
                     name="cardNumber"
                     value={form.cardNumber}
-                    onChange={(e) => {
-                      setForm({ ...form, cardNumber: e.target.value })
-                      setErrors({ ...errors, cardNumber: "" })  // clear card number error
-                    }}
+                    onChange={handleChange}
                     placeholder="1234 5678 9012 3456"
                     className="pl-10"
                   />
+                  {validator.current.message("cardNumber", form.cardNumber, "required", { className: "text-sm text-destructive mt-1", attribute: "card number" })}
                   <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
-                {errors.cardNumber && <p className="text-sm text-red-500">{errors.cardNumber}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -393,13 +352,10 @@ export default function CheckoutForm() {
                     name="expiryDate"
                     placeholder="MM/YY"
                     value={form.expiryDate}
-                    onChange={(e) => {
-                      setForm({ ...form, expiryDate: e.target.value })
-                      setErrors({ ...errors, expiryDate: "" })  // clear expiry date error
-                    }}
+                    onChange={handleChange}
                     className="mt-1"
                   />
-                  {errors.expiryDate && <p className="text-sm text-red-500">{errors.expiryDate}</p>}
+                  {validator.current.message("expiryDate", form.expiryDate, "required", { className: "text-sm text-destructive mt-1", attribute: "expiry date" })}
                 </div>
                 <div>
                   <Label htmlFor="cvv" className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -410,14 +366,11 @@ export default function CheckoutForm() {
                     name="cvv"
                     placeholder="123"
                     value={form.cvv}
-                    onChange={(e) => {
-                      setForm({ ...form, cvv: e.target.value })
-                      setErrors({ ...errors, cvv: "" })  // clear CVV error
-                    }}
+                    onChange={handleChange}
                     maxLength={4}
                     className="mt-1"
                   />
-                  {errors.cvv && <p className="text-sm text-red-500">{errors.cvv}</p>}
+                  {validator.current.message("cvv", form.cvv, "required", { className: "text-sm text-destructive mt-1", attribute: "cvv" })}
                 </div>
               </div>
             </div>
