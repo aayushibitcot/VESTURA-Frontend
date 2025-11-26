@@ -97,7 +97,7 @@ export const SORT_OPTIONS = [
   { label: "Name: A-Z", value: "name-az" },
 ];
 
-export const  API_PATH = {
+export const API_PATH = {
   CATEGORIES: "/api/categories",
   PRODUCTS: "/api/products",
   PRODUCTS_BY_CATEGORY: "/api/products/category",
@@ -107,5 +107,9 @@ export const  API_PATH = {
 
 }
 
-export const CONTENTFUL_URL = 
-`${process.env.NEXT_PUBLIC_CONTENTFUL_BASE_URL}/spaces/${process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID}/environments/${process.env.NEXT_PUBLIC_CONTENTFUL_ENVIRONMENT}/entries?access_token=${process.env.NEXT_PUBLIC_CONTENTFUL_ACCESS_TOKEN}`
+export const capitalizeStatus = (status: string) => {
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+}
+export const CONTENTFUL_URL =
+  `${process.env.NEXT_PUBLIC_CONTENTFUL_BASE_URL}/spaces/${process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID}/environments/${process.env.NEXT_PUBLIC_CONTENTFUL_ENVIRONMENT}/entries?access_token=${process.env.NEXT_PUBLIC_CONTENTFUL_ACCESS_TOKEN}`
+

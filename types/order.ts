@@ -42,13 +42,31 @@ export interface CreateOrderParams {
 export interface Order {
   id?: string;
   orderNumber?: string;
-  items?: OrderItem[];
+  date?: string;
+  items?: Array<{
+    id?: string;
+    product?: {
+      name: string;
+      image?: string;
+      sku?: string;
+      price?: number;
+    };
+    quantity?: number;
+    price?: number;
+    selectedSize?: string;
+    selectedColor?: string;
+  }>;
   shippingAddress?: ShippingAddress;
   billingAddress?: BillingAddress;
   paymentMethod?: string;
+  paymentStatus?: string;
+  deliveryStatus?: string;
   couponCode?: string;
   stripeSessionId?: string;
   total?: number;
+  subtotal?: number;
+  shipping?: number;
+  tax?: number;
   status?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -67,6 +85,47 @@ export interface OrderResponse {
   message?: string;
   data?: Order;
   error?: string;
+}
+
+// Orders List Response Types
+export interface OrdersListResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    orders: OrderListItem[];
+    pagination?: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
+  error?: string;
+}
+
+// Order List Item (for API response)
+export interface OrderListItem {
+  id: string;
+  orderNumber?: string;
+  date?: string;
+  total: number;
+  subtotal?: number;
+  shipping?: number;
+  tax?: number;
+  paymentStatus: string;
+  deliveryStatus: string;
+  items?: Array<{
+    id?: string;
+    product?: {
+      name: string;
+      image?: string;
+      sku?: string;
+    };
+    quantity?: number;
+    price?: number;
+    selectedSize?: string;
+    selectedColor?: string;
+  }>;
 }
 
 // Order Summary Types (for UI display)

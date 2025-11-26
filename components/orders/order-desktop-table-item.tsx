@@ -32,13 +32,13 @@ export default function OrderDesktopTableItem({
         index % 2 === 0 ? "bg-background" : "bg-muted/10"
       }`}
     >
-      <td className="px-6 py-4 font-medium">#{order.id}</td>
+      <td className="px-6 py-4 text-sm max-w-xs truncate">#{order.id}</td>
       <td className="px-6 py-4 text-sm max-w-xs truncate" title={order.products}>
         {order.products}
-      </td>
-      <td className="px-6 py-4 text-muted-foreground">{order.date}</td>
-      <td className="px-6 py-4 font-medium">${order.total.toFixed(2)}</td>
-      <td className="px-6 py-4">
+        </td>
+      <td className="px-6 py-4 text-sm max-w-xs truncate">{order.date}</td>
+      <td className="px-6 py-4 text-sm max-w-xs truncate">${order.total.toFixed(2)}</td>
+      <td className="px-6 py-4 text-sm max-w-xs truncate">
         <span
           className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
             order.paymentStatus,
@@ -47,7 +47,7 @@ export default function OrderDesktopTableItem({
           {order.paymentStatus}
         </span>
       </td>
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 text-sm max-w-xs truncate">
         <span
           className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
             order.deliveryStatus,
@@ -56,7 +56,7 @@ export default function OrderDesktopTableItem({
           {order.deliveryStatus}
         </span>
       </td>
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 text-sm max-w-xs truncate">
         <Link href={`${PRIVATE_PATH.ORDER_DETAILS.replace("[orderId]", order.id)}`}>
           <Button
             variant="ghost"
