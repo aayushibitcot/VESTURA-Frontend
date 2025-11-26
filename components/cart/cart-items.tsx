@@ -4,97 +4,29 @@ import Link from "next/link"
 import { Trash2, Plus, Minus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE, PUBLIC_PATH } from "@/utils/constant"
-import { fetchCart } from "@/store/cart/action"
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { CartItemFromAPI } from "@/types/cart"
 import { useCart } from "@/lib/cart-provider"
 
 interface CartItemsProps {
   cartItems?: CartItemFromAPI[]
-  onItemsChange?: (items: CartItemFromAPI[], total?: number) => void
 }
 
-export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: CartItemsProps) {
+export default function CartItems({ cartItems }: CartItemsProps) {
   const { toast } = useToast()
   const router = useRouter()
-  const { removeItemById, updateQuantityById, syncCartFromAPI } = useCart()
-  const [cartItemsData, setCartItemsData] = useState<CartItemFromAPI[]>(cartItemsProp || [])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchCartData = async () => {
-      setIsLoading(true)
-      const res = await fetchCart()
-      if (res.success && res.data) {
-        const fetchedItems = res.data.items || []
-        setCartItemsData(fetchedItems)
-        // Notify parent of fetched items with total from API
-        if (onItemsChange) {
-          onItemsChange(fetchedItems, res.data.total)
-        }
-      } else {
-        if (res.error === 'UNAUTHORIZED' || res.message?.toLowerCase().includes('unauthorized')) {
-          toast({
-            title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
-            description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
-            variant: "destructive",
-          })
-          router.push(PUBLIC_PATH.LOGIN)
-          setIsLoading(false)
-          return
-        }
-        toast({
-          title: VALIDATION_ERROR_MESSAGE.FAILED_TO_FETCH_CART,
-          description: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_FETCH_CART,
-          variant: "destructive",
-        })
-      }
-      setIsLoading(false)
-    }
-    
-    // If cartItems prop is provided and has items, use it; otherwise fetch
-    if (cartItemsProp && cartItemsProp.length > 0) {
-      setCartItemsData(cartItemsProp)
-      setIsLoading(false)
-    } else {
-      fetchCartData()
-    }
-  }, [cartItemsProp, toast, router])
-
-  // Notify parent when items change (calculate total from subtotals)
-  useEffect(() => {
-    if (onItemsChange && cartItemsData.length > 0) {
-      const calculatedTotal = cartItemsData.reduce((sum, item) => sum + (item.subtotal || 0), 0)
-      onItemsChange(cartItemsData, calculatedTotal)
-    }
-  }, [cartItemsData, onItemsChange])
+  const { removeItemById, updateQuantityById } = useCart()
 
   const handleRemoveItem = async (itemId: string) => {
     try {
       await removeItemById(itemId)
       
-      // Fetch updated cart to get latest data including total
-      const cartRes = await fetchCart()
-      if (cartRes.success && cartRes.data) {
-        const updatedItems = cartRes.data.items || []
-        setCartItemsData(updatedItems)
-        // Notify parent of updated items with total from API
-        if (onItemsChange) {
-          onItemsChange(updatedItems, cartRes.data.total)
-        }
-      } else {
-        // Fallback: Remove item from local state if fetch fails
-        setCartItemsData(prev => prev.filter(cartItem => cartItem.id !== itemId))
-        if (onItemsChange) {
-          onItemsChange(cartItemsData.filter(cartItem => cartItem.id !== itemId))
-        }
-      }
-      
       toast({
         title: VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,
         description: "Item has been removed from your cart.",
       })
+      
+      router.refresh()
     } catch (error: any) {
       if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
@@ -121,42 +53,8 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
 
     try {
       await updateQuantityById(itemId, newQuantity)
-
-      // Fetch updated cart to get latest data including subtotal and total
-      const cartRes = await fetchCart()
-      if (cartRes.success && cartRes.data) {
-        const updatedItems = cartRes.data.items || []
-        setCartItemsData(updatedItems)
-        // Notify parent of updated items with total from API so Order Summary can recalculate
-        if (onItemsChange) {
-          onItemsChange(updatedItems, cartRes.data.total)
-        }
-      } else {
-        // Fallback: Update local state if fetch fails
-        setCartItemsData(prev => 
-          prev.map(cartItem => 
-            cartItem.id === itemId 
-              ? { 
-                  ...cartItem, 
-                  quantity: newQuantity,
-                  subtotal: cartItem.product.price * newQuantity
-                }
-              : cartItem
-          )
-        )
-        if (onItemsChange) {
-          const updatedLocalItems = cartItemsData.map(cartItem => 
-            cartItem.id === itemId 
-              ? { 
-                  ...cartItem, 
-                  quantity: newQuantity,
-                  subtotal: cartItem.product.price * newQuantity
-                }
-              : cartItem
-          )
-          onItemsChange(updatedLocalItems)
-        }
-      }
+      
+      router.refresh()
     } catch (error: any) {
       if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
@@ -176,21 +74,13 @@ export default function CartItems({ cartItems: cartItemsProp, onItemsChange }: C
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <p className="text-muted-foreground">Loading cart items...</p>
-      </div>
-    )
-  }
-
-  if (!cartItemsData || cartItemsData.length === 0) {
+  if (!cartItems || cartItems.length === 0) {
     return null
   }
 
   return (
     <div className="space-y-4">
-      {cartItemsData.map((item) => {
+      {cartItems.map((item) => {
         const product = item.product
         const itemPrice = typeof product.price === "number" && !isNaN(product.price) ? product.price : 0
 
