@@ -5,10 +5,72 @@ import { Product } from "@/types/products"
 import { addToCart as addToCartAPI, fetchCart, clearCart as clearCartAPI, removeCartItem, updateCartItemQuantity as updateCartItemQuantityAPI } from "@/store/cart/action"
 import { useRouter } from "next/navigation"
 import { PRIVATE_PATH, PUBLIC_PATH } from "@/utils/constant"
-import { useEffect } from "react"
+import { useEffect, useRef, useCallback } from "react"
 
 interface CartProviderProps {
   children: React.ReactNode
+}
+
+// Internal component to handle cart initialization
+// This ensures cart syncs only once when CartProvider mounts
+function CartInitializer() {
+  const {
+    addItem: addItemToCart,
+    clearCart: clearCartState,
+  } = useShoppingCart()
+  
+  // Use ref to track initialization and prevent multiple calls
+  const hasInitialized = useRef(false)
+  const isInitializing = useRef(false)
+
+  useEffect(() => {
+    // Prevent multiple initializations (handles React StrictMode double-render)
+    if (hasInitialized.current || isInitializing.current) {
+      return
+    }
+
+    const initializeCart = async () => {
+      try {
+        isInitializing.current = true
+        const res = await fetchCart()
+        if (res.success && res.data?.items) {
+          // Clear current cart first
+          clearCartState()
+          
+          // Add all items from API to cart
+          if (res.data.items.length > 0) {
+            res.data.items.forEach((item: any) => {
+              addItemToCart({
+                id: item.product.sku,
+                name: item.product.name,
+                description: item.product.description || "",
+                price: item.product.price,
+                currency: item.product.currency || "USD",
+                image: item.product.image,
+                product_data: {
+                  selectedSize: item.selectedSize,
+                  selectedColor: item.selectedColor,
+                  category: item.product.category || "",
+                },
+              }, { count: item.quantity })
+            })
+          }
+        }
+        hasInitialized.current = true
+      } catch (error) {
+        console.error("Error initializing cart from API:", error)
+        // Allow retry on error
+        hasInitialized.current = false
+      } finally {
+        isInitializing.current = false
+      }
+    }
+
+    initializeCart()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run once on mount
+
+  return null
 }
 
 export default function CartProvider({ children }: CartProviderProps) {
@@ -23,6 +85,7 @@ export default function CartProvider({ children }: CartProviderProps) {
       successUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}${PRIVATE_PATH.ORDER_SUCCESS}`}
       cancelUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}${PRIVATE_PATH.CART}`}
     >
+      <CartInitializer />
       {children}
     </ShoppingCartProvider>
   )
@@ -41,10 +104,20 @@ export function useCart() {
   } = useShoppingCart()
 
   const router = useRouter()
+  
+  // Use ref to prevent concurrent syncs
+  const isSyncing = useRef(false)
 
   // Sync cart from API - can be called manually after operations
-  const syncCartFromAPI = async () => {
+  // Memoized with useCallback to prevent recreation on every render
+  const syncCartFromAPI = useCallback(async () => {
+    // Prevent concurrent syncs
+    if (isSyncing.current) {
+      return
+    }
+    
     try {
+      isSyncing.current = true
       const res = await fetchCart()
       if (res.success && res.data?.items) {
         // Clear current cart first
@@ -71,19 +144,13 @@ export function useCart() {
       }
     } catch (error) {
       console.error("Error syncing cart from API:", error)
+    } finally {
+      isSyncing.current = false
     }
-  }
+  }, [clearCartState, addItemToCart])
 
-  // Sync cart from API on mount and ensure persistence
-  useEffect(() => {
-    const initializeCart = async () => {
-      // First, sync from API to get the latest cart state
-      await syncCartFromAPI()
-    }
-    
-    initializeCart()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Only run on mount - clearCartState and addItemToCart are stable
+  // Note: Initial cart sync is now handled by CartInitializer component
+  // This prevents multiple API calls when useCart is called from multiple components
 
   // Convert cartDetails to array format compatible with existing code
   const cartItems = Object.values(cartDetails || {}).map((item: any) => ({
