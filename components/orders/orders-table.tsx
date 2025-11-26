@@ -33,18 +33,11 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
   const [isDesktop, setIsDesktop] = useState(false)
 
   useEffect(() => {
-    // Set initial width
     const checkWidth = () => {
       setIsDesktop(window.innerWidth >= 768)
     }
-
-    // Check on mount
     checkWidth()
-
-    // Add event listener for window resize
     window.addEventListener("resize", checkWidth)
-
-    // Cleanup event listener on unmount
     return () => {
       window.removeEventListener("resize", checkWidth)
     }

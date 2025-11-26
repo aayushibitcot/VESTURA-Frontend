@@ -28,17 +28,17 @@ export default function OrderMobileViewItem({
       <div className="flex justify-between items-start">
         <div>
           <div className="font-medium text-sm text-muted-foreground">Order ID</div>
-          <div className="font-semibold">#{order.id}</div>
+          <div className="font-semibold text-sm max-w-xs truncate">#{order.id}</div>
         </div>
         <div className="text-right">
           <div className="font-medium text-sm text-muted-foreground">Date</div>
-          <div>{order.date}</div>
+          <div className="text-sm max-w-xs truncate">{order.date}</div>
         </div>
       </div>
 
       <div>
         <div className="font-medium text-sm text-muted-foreground mb-1">Products</div>
-        <div className="text-sm">{order.products}</div>
+        <div className="text-sm max-w-xs truncate">{order.products}</div>
       </div>
 
       <div className="border-t border-border pt-3 space-y-2">

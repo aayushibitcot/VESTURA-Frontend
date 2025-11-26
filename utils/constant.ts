@@ -105,3 +105,7 @@ export const  API_PATH = {
   ADD_TO_CART: "/api/cart/items",
   ORDERS: "/api/orders",
 }
+
+export const capitalizeStatus = (status: string) => {
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+}

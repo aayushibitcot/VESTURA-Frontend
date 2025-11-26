@@ -3,46 +3,38 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import OrdersTable from "./orders-table"
 import { SectionHeading } from "../ui/section-heading"
-import { PRIVATE_PATH } from "@/utils/constant"
+import { PRIVATE_PATH, capitalizeStatus } from "@/utils/constant"
+import { OrderListItem } from "@/types/order"
 
-// Sample orders data - in a real app, this would come from a database/API
-const sampleOrders = [
-  {
-    id: "ORD-1024",
-    date: "Nov 7, 2025",
-    total: 329.98,
-    paymentStatus: "Paid",
-    deliveryStatus: "Delivered",
-    products: "Winter Parka Coat, Leather Chelsea Boots",
-  },
-  {
-    id: "ORD-1023",
-    date: "Nov 5, 2025",
-    total: 159.99,
-    paymentStatus: "Paid",
-    deliveryStatus: "Shipped",
-    products: "White Leather Sneakers",
-  },
-  {
-    id: "ORD-1022",
-    date: "Nov 2, 2025",
-    total: 89.99,
-    paymentStatus: "Paid",
-    deliveryStatus: "Processing",
-    products: "Cotton T-Shirt Pack",
-  },
-  {
-    id: "ORD-1021",
-    date: "Oct 28, 2025",
-    total: 249.97,
-    paymentStatus: "Paid",
-    deliveryStatus: "Delivered",
-    products: "Slim Fit Denim Jeans, V-Neck Premium Tee",
-  },
-]
+interface MyOrdersListProps {
+  orders: OrderListItem[]
+}
 
-export default function MyOrdersList() {
-  const hasOrders = sampleOrders.length > 0
+export default function MyOrdersList({ orders }: MyOrdersListProps) {
+  const transformedOrders = orders.map((order) => {
+    const products = order.items
+      ?.map((item) => item.product?.name || "Product")
+      .join(", ") || "No products"
+
+    const formattedDate = order.date
+      ? new Date(order.date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "N/A"
+
+    return {
+      id: order.orderNumber || order.id,
+      date: formattedDate,
+      total: order.total,
+      paymentStatus: capitalizeStatus(order.paymentStatus),
+      deliveryStatus: capitalizeStatus(order.deliveryStatus),
+      products,
+    }
+  })
+
+  const hasOrders = transformedOrders.length > 0
 
   return (
       <main className="flex-1 py-12 md:py-16">
@@ -58,7 +50,7 @@ export default function MyOrdersList() {
               </Link>
             </div>
           ) : (
-            <OrdersTable orders={sampleOrders} />
+            <OrdersTable orders={transformedOrders} />
           )}
         </div>
       </main>
