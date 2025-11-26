@@ -19,8 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE, PUBLIC_PATH } from "@/utils/constant"
 import { useRouter } from "next/navigation"
-import { CartData, CartItemFromAPI } from "@/types/cart"
-import { useState, useEffect } from "react"
+import { CartData } from "@/types/cart"
 import { useCart } from "@/lib/cart-provider"
 
 interface CartProps {
@@ -31,19 +30,22 @@ export default function Cart({ cartData }: CartProps) {
   const { toast } = useToast()
   const router = useRouter()
   const { clearCart } = useCart()
-  const [cartItems, setCartItems] = useState<CartItemFromAPI[]>(cartData?.items || [])
-  const [cartTotal, setCartTotal] = useState<number>(cartData?.total || 0)
+  
+  // Use props directly from server component - no local state needed
+  const cartItems = cartData?.items || []
+  const cartTotal = cartData?.total || 0
 
   const handleClearCart = async () => {
     try {
       await clearCart()
-      setCartItems([])
-      setCartTotal(0)
 
       toast({
         title: VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
         description: VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
       })
+      
+      // Refresh server data to get updated cart
+      router.refresh()
     } catch (error: any) {
       if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
@@ -62,14 +64,6 @@ export default function Cart({ cartData }: CartProps) {
       })
     }
   }
-
-  // Update cart items and total when cartData changes
-  useEffect(() => {
-    if (cartData) {
-      setCartItems(cartData.items || [])
-      setCartTotal(cartData.total || 0)
-    }
-  }, [cartData])
 
   if (!cartItems || cartItems.length === 0) {
     return (
@@ -123,14 +117,7 @@ export default function Cart({ cartData }: CartProps) {
       </div>
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-8">
-        <CartItems 
-          cartItems={cartItems} 
-          onItemsChange={(items, total) => {
-            setCartItems(items)
-            // Use total from API if provided, otherwise calculate from items
-            setCartTotal(total !== undefined ? total : items.reduce((sum, item) => sum + (item.subtotal || 0), 0))
-          }}
-        />
+        <CartItems cartItems={cartItems} />
         <OrderSummary 
           orderItems={cartItems} 
           orderTotal={cartTotal} 

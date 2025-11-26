@@ -20,10 +20,8 @@ interface OrderSummaryProps {
   isProcessing?: boolean
   submitButtonText?: string
   className?: string
-  // For success variant - static order data
   orderItems?: OrderItem[] | CartItemFromAPI[]
   orderTotal?: number
-  // For cart variant - use API data instead of context
   useApiData?: boolean
 }
 
@@ -40,11 +38,9 @@ export default function OrderSummary({
 }: OrderSummaryProps) {
   const { cartItems, cartCount, totalPrice, redirectToCheckout } = useCart()
 
-  // Convert CartItemFromAPI[] to OrderItem[] format if needed
   const convertToOrderItems = (items: OrderItem[] | CartItemFromAPI[]): OrderItem[] => {
     if (!items || items.length === 0) return []
     
-    // Check if first item is CartItemFromAPI (has product property)
     if (items[0] && 'product' in items[0]) {
       return (items as CartItemFromAPI[]).map(item => ({
         name: item.product.name,
@@ -57,7 +53,6 @@ export default function OrderSummary({
     return items as OrderItem[]
   }
 
-  // Calculate total from items if orderTotal not provided
   const calculateTotalFromItems = (items: OrderItem[] | CartItemFromAPI[]): number => {
     if (!items || items.length === 0) return 0
     
@@ -67,24 +62,20 @@ export default function OrderSummary({
     return (items as OrderItem[]).reduce((sum, item) => sum + (item.price * item.quantity), 0)
   }
 
-  // Calculate cart count from items
   const calculateCartCount = (items: OrderItem[] | CartItemFromAPI[]): number => {
     if (!items || items.length === 0) return 0
     return items.reduce((sum, item) => sum + item.quantity, 0)
   }
 
-  // Use orderItems if provided, otherwise use cartItems from context
   const rawItems = (variant === "success" || useApiData) && orderItems ? orderItems : cartItems
   const items = convertToOrderItems(rawItems)
   
-  // Use orderTotal if provided, otherwise calculate from items or use context total
   const displayTotal = orderTotal !== undefined 
     ? orderTotal 
     : (variant === "success" || useApiData) && orderItems
     ? calculateTotalFromItems(orderItems)
     : totalPrice
 
-  // Calculate cart count
   const itemCount = (variant === "success" || useApiData) && orderItems
     ? calculateCartCount(orderItems)
     : cartCount
@@ -185,7 +176,7 @@ export default function OrderSummary({
         <>
           <Button
             onClick={redirectToCheckout}
-            className="w-full bg-foreground text-background hover:bg-foreground/90 uppercase tracking-wide py-6"
+            className="w-full bg-foreground text-background hover:bg-foreground/90 uppercase tracking-wide py-6 cursor-pointer"
           >
             Proceed to Checkout
           </Button>
@@ -205,7 +196,6 @@ export default function OrderSummary({
         </>
       )}
       
-      {/* Success variant shows no buttons - order is already placed */}
     </div>
   )
 }
