@@ -78,14 +78,13 @@ export default function ProfileForm() {
     fileInputRef.current?.click()
   }
 
-  const uploadImageFile = async (file: File): Promise<string | undefined> => {
+  const uploadImageFile = async (file: File): Promise<string | null> => {
     const res = await uploadImage(file)
-    
-    if (!res.success || !res.data?.image) {
-      return undefined
+    if (!res.success) {
+      return res.message || "Failed to upload image"
     }
     
-    return res.data.image
+    return res.data?.image || null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,13 +93,12 @@ export default function ProfileForm() {
     if (validator.current.allValid()) {
       setIsLoading(true)
       try {
-        let uploadedImageUrl: string | undefined
+        let uploadedImageUrl: string | null = null
         if (selectedFile) {
           const uploadResult = await uploadImageFile(selectedFile)
           if (!uploadResult) {
             toast({
               title: VALIDATION_ERROR_MESSAGE.UPDATE_FAILED,
-              description: "Failed to upload image. Please try again.",
               variant: "destructive",
             })
             setIsLoading(false)
@@ -112,8 +110,7 @@ export default function ProfileForm() {
         const userId = user?.id || user?._id || ""
         if (!userId) {
           toast({
-            title: VALIDATION_ERROR_MESSAGE.UPDATE_FAILED,
-            description: VALIDATION_ERROR_MESSAGE.UPDATE_FAILED_USER_ID_NOT_FOUND,
+            title: VALIDATION_ERROR_MESSAGE.UPDATE_FAILED_USER_ID_NOT_FOUND,
             variant: "destructive",
           })
           setIsLoading(false)
@@ -133,8 +130,7 @@ export default function ProfileForm() {
 
         if (res.success) {
           toast({ 
-            title: VALIDATION_ERROR_MESSAGE.UPDATE_SUCCESS, 
-            description: res.message,
+            title: res.message || VALIDATION_ERROR_MESSAGE.UPDATE_SUCCESS, 
             variant: "success"
           })
           // Clear the selected file and preview after successful upload
@@ -142,15 +138,13 @@ export default function ProfileForm() {
           setPreviewUrl(null)
         } else {
           toast({
-            title: VALIDATION_ERROR_MESSAGE.UPDATE_FAILED,
-            description: res.message,
+            title: res.message || VALIDATION_ERROR_MESSAGE.UPDATE_FAILED,
             variant: "destructive",
           })
         }
       } catch (err) {
         toast({
-          title: VALIDATION_ERROR_MESSAGE.UPDATE_FAILED,
-          description: err instanceof Error ? err.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+          title: err instanceof Error ? err.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
           variant: "destructive",
         })
       } finally {
