@@ -3,7 +3,7 @@
 import { ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { PRIVATE_PATH } from "@/utils/constant"
+import { PRIVATE_PATH, getStatusColor } from "@/utils/constant"
 
 interface Order {
   id: string
@@ -17,20 +17,12 @@ interface Order {
 interface OrderDesktopTableItemProps {
   order: Order
   index: number
-  getStatusColor: (status: string) => string
 }
 
-export default function OrderDesktopTableItem({
-  order,
-  index,
-  getStatusColor,
-}: OrderDesktopTableItemProps) {
+export default function OrderDesktopTableItem({ order }: OrderDesktopTableItemProps) {
   return (
     <tr
       key={order.id}
-      className={`border-t border-border hover:bg-muted/20 transition-colors ${
-        index % 2 === 0 ? "bg-background" : "bg-muted/10"
-      }`}
     >
       <td className="px-6 py-4 text-sm max-w-xs truncate">#{order.id}</td>
       <td className="px-6 py-4 text-sm max-w-xs truncate" title={order.products}>

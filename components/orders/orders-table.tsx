@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import OrderDesktopTableItem from "./order-desktop-table-item"
 import OrderMobileViewItem from "./order-mobile-view-item"
+import { getStatusColor } from "@/utils/constant"
 
 interface Order {
   id: string
@@ -15,18 +16,6 @@ interface Order {
 
 interface OrdersTableProps {
   orders: Order[]
-}
-
-function getStatusColor(status: string) {
-  const colors: Record<string, string> = {
-    Paid: "text-green-600 bg-green-50",
-    Pending: "text-yellow-600 bg-yellow-50",
-    Canceled: "text-red-600 bg-red-50",
-    Delivered: "text-green-600 bg-green-50",
-    Shipped: "text-blue-600 bg-blue-50",
-    Processing: "text-orange-600 bg-orange-50",
-  }
-  return colors[status] || "text-gray-600 bg-gray-50"
 }
 
 export default function OrdersTable({ orders }: OrdersTableProps) {
@@ -66,7 +55,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                 key={order.id}
                 order={order}
                 index={index}
-                getStatusColor={getStatusColor}
               />
             ))}
           </tbody>
@@ -81,7 +69,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
             <OrderMobileViewItem
               key={order.id}
               order={order}
-              getStatusColor={getStatusColor}
             />
           ))}
         </div>

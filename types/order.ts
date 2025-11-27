@@ -4,6 +4,10 @@ export interface OrderItem {
   quantity: number;
   selectedSize?: string;
   selectedColor?: string;
+  price?: number;
+  name?: string;
+  image?: string;
+  sku?: string;
 }
 
 // Address Types
@@ -147,4 +151,3 @@ export interface OrderSummary {
   subtotal?: number;
   tax?: number;
 }
-
