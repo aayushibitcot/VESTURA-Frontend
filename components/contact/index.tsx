@@ -1,7 +1,10 @@
 "use client"
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { SectionHeading } from "../ui/section-heading";
 import { useToast } from "@/hooks/use-toast";
+import { submitContact } from "@/store/contact/action";
+import SimpleReactValidator from "simple-react-validator";
+import { VALIDATION_ERROR_MESSAGE } from "@/utils/constant";
 
 const defaultForm = {
   name: "",
@@ -14,37 +17,65 @@ type FormType = typeof defaultForm
 
 export default function Contact() {
   const [form, setForm] = useState<FormType>(defaultForm)
-  const [errors, setErrors] = useState<Partial<FormType>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [shouldShowErrors, setShouldShowErrors] = useState(false)
   const { toast } = useToast()
+  const [, forceUpdate] = useState(0)
+  const validator = useRef(
+    new SimpleReactValidator({
+      messages: {
+        required: ":attribute" + VALIDATION_ERROR_MESSAGE.REQUIRED,
+        email: ":attribute" + VALIDATION_ERROR_MESSAGE.INVALID_EMAIL,
+      },
+    })
+  )
 
-  const validate = () => {
-    const newErrors: Partial<FormType> = {}
-    if (!form.name.trim()) {
-      newErrors.name = "Name is required"
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setForm({ ...form, [name]: value })
+    if (shouldShowErrors) {
+      validator.current.showMessageFor(name)
     }
-    if (!form.email.trim()) {
-      newErrors.email = "Email is required"
-    }
-    if (!form.subject.trim()) {
-      newErrors.subject = "Subject is required"
-    }
-    if (!form.message.trim()) {
-      newErrors.message = "Message is required"
-    }
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const error = validate()
-    if (error) {
-      toast({
-        title: "Validation error",
-        description: error,
-        variant: "destructive",
-      })
-      return
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()    
+
+    if (validator.current.allValid()) { 
+      setIsSubmitting(true)
+      try {
+        const result = await submitContact(form)
+        if (result.success) {
+          toast({
+            title: VALIDATION_ERROR_MESSAGE.CONTACT_SUBMITTED_SUCCESSFULLY,
+            description: result.message || VALIDATION_ERROR_MESSAGE.CONTACT_SUBMITTED_SUCCESSFULLY_DESCRIPTION,
+          })
+          // Reset form after successful submission
+          setForm(defaultForm)
+          setShouldShowErrors(false)
+          validator.current.hideMessages()
+          forceUpdate((prev) => prev + 1)
+        } else {
+          toast({
+            title: VALIDATION_ERROR_MESSAGE.FAILED_TO_SUBMIT_CONTACT,
+            description: result.message || VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        toast({
+          title: VALIDATION_ERROR_MESSAGE.FAILED_TO_SUBMIT_CONTACT,
+          description: VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+          variant: "destructive",
+        })
+      } finally {
+        setIsSubmitting(false)
+      }
+    }
+    else {
+      setShouldShowErrors(true)
+      validator.current.showMessages()
+      forceUpdate((prev) => prev + 1)
     }
   }
 
@@ -100,77 +131,70 @@ export default function Contact() {
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="name" className="block text-sm font-medium mb-2">
-                  Name
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   id="name"
-                  className="w-full border border-border px-4 py-2 bg-background"
+                  className="h-11 w-full border border-border px-4 py-2 bg-background"
                   placeholder="Your name"
                   value={form.name}
-                  onChange={(e) => {
-                    setForm({ ...form, name: e.target.value })
-                    setErrors({ ...errors, name: "" })
-                  }}
+                  onChange={handleChange}
+                  name="name"
                 />
-                {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-              </div>
+                {shouldShowErrors && validator.current.message("name", form.name, "required|min:2", { className: "text-sm text-destructive mt-1" })}
+                </div>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium mb-2">
-                  Email
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
                   id="email"
-                  className="w-full border border-border px-4 py-2 bg-background"
+                  className="h-11 w-full border border-border px-4 py-2 bg-background"
                   placeholder="your.email@example.com"
                   value={form.email}
-                  onChange={(e) => {
-                    setForm({ ...form, email: e.target.value })
-                    setErrors({ ...errors, email: "" })
-                  }}
+                  onChange={handleChange}
+                  name="email"
                 />
-                {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+                {shouldShowErrors && validator.current.message("email", form.email, "required|email", { className: "text-sm text-destructive mt-1" })}
               </div>
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium mb-2">
-                  Subject
+                  Subject <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   id="subject"
-                  className="w-full border border-border px-4 py-2 bg-background"
+                  className="h-11 w-full border border-border px-4 py-2 bg-background"
                   placeholder="How can we help?"
                   value={form.subject}
-                  onChange={(e) => {
-                    setForm({ ...form, subject: e.target.value })
-                    setErrors({ ...errors, subject: "" })
-                  }}
+                  onChange={handleChange}
+                  name="subject"
                 />
-                {errors.subject && <p className="text-sm text-red-500">{errors.subject}</p>}
+                {shouldShowErrors && validator.current.message("subject", form.subject, "required|min:3", { className: "text-sm text-destructive mt-1" })}
               </div>
               <div>
                 <label htmlFor="message" className="block text-sm font-medium mb-2">
-                  Message
+                  Message <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   id="message"
                   rows={4}
-                  className="w-full border border-border px-4 py-2 bg-background resize-none"
+                  className="h-11 w-full border border-border px-4 py-2 bg-background resize-none"
                   placeholder="Your message..."
                   value={form.message}
-                  onChange={(e) => {
-                    setForm({ ...form, message: e.target.value })
-                    setErrors({ ...errors, message: "" })
-                  }}
+                  onChange={handleChange}
+                  name="message"
                 />
-                {errors.message && <p className="text-sm text-red-500">{errors.message}</p>}
+                {shouldShowErrors && validator.current.message("message", form.message, "required|min:10", { className: "text-sm text-destructive mt-1" })}
               </div>
               <button
                 type="submit"
-                className="w-full bg-foreground text-background hover:bg-foreground/90 px-6 py-3 uppercase tracking-wide transition-colors"
+                disabled={isSubmitting}
+                className="w-full bg-foreground text-background hover:bg-foreground/90 px-6 py-3 uppercase tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Send Message
+                {isSubmitting ? "Sending..." : "Send Message"}
               </button>
             </form>
           </div>

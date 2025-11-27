@@ -78,6 +78,9 @@ export const VALIDATION_ERROR_MESSAGE = {
   FAILED_TO_CREATE_ORDER: "Failed to create order",
   ORDER_CREATED_SUCCESSFULLY: "Order created successfully",
   PLEASE_FILL_IN_ALL_REQUIRED_FIELDS_CORRECTLY: "Please fill in all required fields correctly.",
+  FAILED_TO_SUBMIT_CONTACT: "Failed to submit contact form",
+  CONTACT_SUBMITTED_SUCCESSFULLY: "Thank you for contacting us. We will get back to you soon.",
+  CONTACT_SUBMITTED_SUCCESSFULLY_DESCRIPTION: "We'll get back to you as soon as possible.",
 };
 
 // Default pagination
@@ -104,6 +107,7 @@ export const  API_PATH = {
   CART: "/api/cart",
   ADD_TO_CART: "/api/cart/items",
   ORDERS: "/api/orders",
+  CONTACT: "/api/contact",
 }
 
 export const capitalizeStatus = (status: string) => {
