@@ -50,14 +50,15 @@ export default function LoginForm() {
       const res = await signIn(form, dispatch)
       if (res?.success) {
         toast({ 
-          description: res?.message || VALIDATION_ERROR_MESSAGE.LOGIN_SUCCESS_DESCRIPTION,
+          title: res?.message,
+          variant: "success",
         })
         setTimeout(() => {
           router.push(PRIVATE_PATH.HOME)
         }, 500)
       } else {
         toast({
-          description: res?.message || VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+          title: res?.message || VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
           variant: "destructive",
         })
       }

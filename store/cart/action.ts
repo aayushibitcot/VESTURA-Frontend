@@ -81,13 +81,13 @@ export const addToCart = async (params: AddToCartParams) => {
 
     if (!res.success) {
       return {
-        message: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_ADD_TO_CART,
+        message: res.message,
         success: false,
         error: res.error
       };
     }
     return {
-      message: res.message || VALIDATION_ERROR_MESSAGE.ITEM_ADDED_TO_CART_SUCCESSFULLY,
+      message: res.message,
       success: true,
       data: res.data
     };
@@ -123,13 +123,13 @@ export const clearCart = async () => {
 
     if (!res.success) {
       return {
-        message: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_CLEAR_CART,
+        message: res.message,
         success: false,
         error: res.error
       };
     }
     return {
-      message: res.message || VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
+      message: res.message,
       success: true,
       data: res.data
     };
@@ -165,13 +165,13 @@ export const removeCartItem = async (itemId: string) => {
 
     if (!res.success) {
       return {
-        message: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_REMOVE_CART_ITEM,
+        message: res.message,
         success: false,
         error: res.error
       };
     }
     return {
-      message: res.message || VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,
+      message: res.message,
       success: true,
       data: res.data
     };
@@ -215,13 +215,13 @@ export const updateCartItemQuantity = async (itemId: string, quantity: number) =
 
     if (!res.success) {
       return {
-        message: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
+        message: res.message,
         success: false,
         error: res.error
       };
     }
     return {
-      message: res.message || VALIDATION_ERROR_MESSAGE.CART_ITEM_QUANTITY_UPDATED_SUCCESSFULLY,
+      message: res.message,
       success: true,
       data: res.data
     };
