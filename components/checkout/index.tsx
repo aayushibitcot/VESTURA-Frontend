@@ -17,9 +17,8 @@ export default function Checkout({ onCreateOrder }: CheckoutProps) {
 
   if (!cartItems || cartItems.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <main className="flex-1 py-12 md:py-16">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="flex-1 py-12 md:py-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <SectionHeading
               title="Checkout"
               description="Your cart is empty"
@@ -35,28 +34,22 @@ export default function Checkout({ onCreateOrder }: CheckoutProps) {
             </div>
           </div>
         </main>
-      </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="max-w-6xl mx-auto">
-            <SectionHeading title="Checkout" align="left" />
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mb-8 flex justify-between items-center"> 
+        <SectionHeading title="Checkout" align="left" />
 
-            <div className="bg-muted/30 border border-border p-4 mb-8 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Returning customer?</span>
-              <Link href={PUBLIC_PATH.LOGIN} className="text-sm underline hover:no-underline">
-                Click here to login
-              </Link>
-            </div>
-
-            <CheckoutForm onCreateOrder={onCreateOrder} />
-          </div>
+        <div className="bg-muted/30 border border-border p-4 mb-8 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Returning customer?</span>
+          <Link href={PUBLIC_PATH.LOGIN} className="text-sm underline hover:no-underline">
+            Click here to login
+          </Link>
         </div>
-      </main>
+          <CheckoutForm onCreateOrder={onCreateOrder} />
+      </div>
     </div>
   )
 }

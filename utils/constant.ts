@@ -109,3 +109,15 @@ export const  API_PATH = {
 export const capitalizeStatus = (status: string) => {
   return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
 }
+
+export const getStatusColor = (status: string) => {
+  const colors: Record<string, string> = {
+    Paid: "text-green-600 bg-green-50",
+    Pending: "text-yellow-600 bg-yellow-50",
+    Canceled: "text-red-600 bg-red-50",
+    Delivered: "text-green-600 bg-green-50",
+    Shipped: "text-blue-600 bg-blue-50",
+    Processing: "text-orange-600 bg-orange-50",
+  }
+  return colors[status] || "text-gray-600 bg-gray-50"
+}

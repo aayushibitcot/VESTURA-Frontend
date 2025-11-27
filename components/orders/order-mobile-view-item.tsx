@@ -3,7 +3,7 @@
 import { ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { PRIVATE_PATH } from "@/utils/constant"
+import { PRIVATE_PATH, getStatusColor } from "@/utils/constant"
 
 interface Order {
   id: string
@@ -16,12 +16,10 @@ interface Order {
 
 interface OrderMobileViewItemProps {
   order: Order
-  getStatusColor: (status: string) => string
 }
 
 export default function OrderMobileViewItem({
   order,
-  getStatusColor,
 }: OrderMobileViewItemProps) {
   return (
     <div key={order.id} className="border border-border rounded-lg p-4 space-y-3">

@@ -68,17 +68,17 @@ export default function Cart({ cartData }: CartProps) {
   if (!cartItems || cartItems.length === 0) {
     return (
       <main className="flex-1 py-12 md:py-16">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <SectionHeading
-          title="Shopping Cart"
-          description="Your cart is empty"
-          align="center"
-          className="mb-8"
-        />
-        <div className="text-center">
-          <Link href={PRIVATE_PATH.SHOP}>
-            <Button className="bg-foreground text-background hover:bg-foreground/90 mx-auto">Continue Shopping</Button>
-          </Link>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <SectionHeading
+            title="Shopping Cart"
+            description="Your cart is empty"
+            align="center"
+            className="mb-8"
+          />
+          <div className="text-center">
+            <Link href={PRIVATE_PATH.SHOP}>
+              <Button className="bg-foreground text-background hover:bg-foreground/90 mx-auto">Continue Shopping</Button>
+            </Link>
           </div>
         </div>
       </main>

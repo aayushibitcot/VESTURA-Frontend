@@ -102,8 +102,7 @@ export default function OrderSummary({
       {showItems && (variant === "checkout" || variant === "success") && (
         <div className="space-y-4 mb-6">
           {items.map((item, index) => (
-            <div key={item.sku || index} className={variant === "success" ? "flex justify-between items-center" : "flex gap-3"}>
-              <div className={variant === "success" ? "flex gap-3 flex-1" : ""}>
+            <div key={item.sku || index} className="flex gap-3"> 
                 <div className={`relative w-16 h-16 flex-shrink-0 ${variant === "success" ? "bg-muted" : "bg-background"}`}>
                   <img
                     src={item.image || "/placeholder.svg"}
@@ -116,8 +115,7 @@ export default function OrderSummary({
                     {item.name}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Qty: {item.quantity}</p>
-                </div>
-              </div>
+                </div>  
               <div className="text-right">
                 <p className={`font-medium ${variant === "success" ? "" : "text-sm"}`}>
                   ${(item.price * item.quantity).toFixed(2)}
