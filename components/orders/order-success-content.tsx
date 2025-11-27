@@ -29,7 +29,6 @@ export default function OrderSuccess({ orderDetails }: OrderSuccessProps) {
   const orderNumber = orderDetails?.orderNumber || `ARD-${Math.floor(Math.random() * 1000)}`
 
   return (
-    <div className="min-h-screen flex flex-col">
       <main className="flex-1 py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-2xl">
           <div className="text-center mb-12">
@@ -62,7 +61,6 @@ export default function OrderSuccess({ orderDetails }: OrderSuccessProps) {
           </div>
         </div>
       </main>
-    </div>
   )
 }
 
