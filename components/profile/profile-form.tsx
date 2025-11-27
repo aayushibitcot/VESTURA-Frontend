@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { getPresignedUrlAction } from "@/utils/graphql/auth/action"
-import { updateUserProfile } from "@/store/users/action"
+import { updateUserProfile, uploadImage } from "@/store/users/action"
 import SimpleReactValidator from "simple-react-validator"
 import { VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
 import { Camera } from "lucide-react"
@@ -79,17 +78,14 @@ export default function ProfileForm() {
     fileInputRef.current?.click()
   }
 
-  const uploadViaPresigned = async (file: File): Promise<string | undefined> => {
-    const res = await getPresignedUrlAction(file)
-    const item = res?.getPresignedUrlForArray?.data?.[0] || res?.data?.[0]
-
-    if (!item?.file_path || !item?.signedUrl) return undefined;
-    await fetch(item.signedUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file,
-    })
-    return item.file_path
+  const uploadImageFile = async (file: File): Promise<string | undefined> => {
+    const res = await uploadImage(file)
+    
+    if (!res.success || !res.data?.image) {
+      return undefined
+    }
+    
+    return res.data.image
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,9 +94,19 @@ export default function ProfileForm() {
     if (validator.current.allValid()) {
       setIsLoading(true)
       try {
-        let uploadedPath: string | undefined
+        let uploadedImageUrl: string | undefined
         if (selectedFile) {
-          uploadedPath = await uploadViaPresigned(selectedFile)
+          const uploadResult = await uploadImageFile(selectedFile)
+          if (!uploadResult) {
+            toast({
+              title: VALIDATION_ERROR_MESSAGE.UPDATE_FAILED,
+              description: "Failed to upload image. Please try again.",
+              variant: "destructive",
+            })
+            setIsLoading(false)
+            return
+          }
+          uploadedImageUrl = uploadResult
         }
         
         const userId = user?.id || user?._id || ""
@@ -120,7 +126,7 @@ export default function ProfileForm() {
             firstName: form.firstName,
             lastName: form.lastName,
             phone: form.phone,
-            ...(uploadedPath && { avatar: uploadedPath }),
+            ...(uploadedImageUrl && { avatar: uploadedImageUrl }),
           },
           dispatch
         )
@@ -131,6 +137,9 @@ export default function ProfileForm() {
             description: res.message,
             variant: "success"
           })
+          // Clear the selected file and preview after successful upload
+          setSelectedFile(null)
+          setPreviewUrl(null)
         } else {
           toast({
             title: VALIDATION_ERROR_MESSAGE.UPDATE_FAILED,

@@ -4,6 +4,8 @@ import { AppDispatch } from "@/store/store";
 import * as userReducer from "./reducer";
 import * as authReducer from "../auth/reducer";
 import { put } from "@/store/serverApiAction/serverApis";
+import Cookies from "js-cookie";
+import { config } from "@/utils/config";
 
 export interface UpdateUserProfileData {
   firstName: string;
@@ -19,6 +21,63 @@ export interface UpdateUserProfileResponse {
     user?: any;
   };
 }
+
+export interface UploadImageResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    image?: string;
+  };
+}
+
+const getAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return Cookies.get('access_token') || Cookies.get('token') || null;
+};
+
+export const uploadImage = async (file: File): Promise<UploadImageResponse> => {
+  try {
+    const baseUrl = config.REST_API_URL;
+    const fullUrl = `${baseUrl}/api/image/image-upload`;
+    
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = getAuthToken();
+    const headers: Record<string, string> = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: result.message || result.error || 'Failed to upload image',
+        data: result.data,
+      };
+    }
+
+    return {
+      success: true,
+      message: result.message || 'Image uploaded successfully',
+      data: result.data || result,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Network error occurred while uploading image',
+    };
+  }
+};
 
 export const updateUserProfile = async (userId: string | number, userData: UpdateUserProfileData, dispatch: AppDispatch): 
   Promise<UpdateUserProfileResponse> => {
