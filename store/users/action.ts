@@ -42,7 +42,7 @@ export const uploadImage = async (file: File): Promise<UploadImageResponse> => {
     
     const formData = new FormData();
     formData.append('image', file);
-
+    
     const token = getAuthToken();
     const headers: Record<string, string> = {};
     
@@ -55,9 +55,7 @@ export const uploadImage = async (file: File): Promise<UploadImageResponse> => {
       headers,
       body: formData,
     });
-
     const result = await response.json();
-
     if (!response.ok) {
       return {
         success: false,
