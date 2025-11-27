@@ -16,14 +16,14 @@ export const submitContact = async (data: ContactFormData) => {
     
     if (!res.success) {
       return {
-        message: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_SUBMIT_CONTACT,
+        message: res.message,
         success: false,
         error: res.error
       };
     }
     
     return {
-      message: res.message || VALIDATION_ERROR_MESSAGE.CONTACT_SUBMITTED_SUCCESSFULLY,
+      message: res.message,
       success: true,
       data: res.data
     };

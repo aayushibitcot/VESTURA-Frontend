@@ -23,6 +23,7 @@ export default function Contact() {
   const [, forceUpdate] = useState(0)
   const validator = useRef(
     new SimpleReactValidator({
+      autoForceUpdate: { forceUpdate },
       messages: {
         required: ":attribute" + VALIDATION_ERROR_MESSAGE.REQUIRED,
         email: ":attribute" + VALIDATION_ERROR_MESSAGE.INVALID_EMAIL,
@@ -40,15 +41,25 @@ export default function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()    
+    setShouldShowErrors(true)
 
+    // Show messages for all fields to trigger validation
+    validator.current.showMessageFor("name")
+    validator.current.showMessageFor("email")
+    validator.current.showMessageFor("subject")
+    validator.current.showMessageFor("message")
+    
+    // Force update to ensure validation state is reflected
+    forceUpdate((prev) => prev + 1)
+
+    // Check if all fields are valid
     if (validator.current.allValid()) { 
       setIsSubmitting(true)
       try {
-        const result = await submitContact(form)
-        if (result.success) {
+        const res = await submitContact(form)
+        if (res.success) {
           toast({
-            title: VALIDATION_ERROR_MESSAGE.CONTACT_SUBMITTED_SUCCESSFULLY,
-            description: result.message || VALIDATION_ERROR_MESSAGE.CONTACT_SUBMITTED_SUCCESSFULLY_DESCRIPTION,
+            title: res.message,
             variant: "success",
           })
           // Reset form after successful submission
@@ -58,23 +69,19 @@ export default function Contact() {
           forceUpdate((prev) => prev + 1)
         } else {
           toast({
-            title: VALIDATION_ERROR_MESSAGE.FAILED_TO_SUBMIT_CONTACT,
-            description: result.message || VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+            title: res.message,
             variant: "destructive",
           })
         }
       } catch (error) {
         toast({
-          title: VALIDATION_ERROR_MESSAGE.FAILED_TO_SUBMIT_CONTACT,
-          description: VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+          title: error instanceof Error ? error.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
           variant: "destructive",
         })
       } finally {
         setIsSubmitting(false)
       }
-    }
-    else {
-      setShouldShowErrors(true)
+    } else {
       validator.current.showMessages()
       forceUpdate((prev) => prev + 1)
     }
