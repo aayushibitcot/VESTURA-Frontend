@@ -114,7 +114,7 @@ export const updateUserProfile = async (userId: string | number, userData: Updat
 
     return {
       success: true,
-      message: res.message || "User updated successfully",
+      message: res.message,
       data: res.data,
     };
   } catch (err) {

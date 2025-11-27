@@ -41,7 +41,7 @@ export default function Cart({ cartData }: CartProps) {
 
       toast({
         title: VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
-        description: VALIDATION_ERROR_MESSAGE.CART_CLEARED_SUCCESSFULLY,
+        variant: "success",
       })
       
       // Refresh server data to get updated cart
@@ -50,7 +50,6 @@ export default function Cart({ cartData }: CartProps) {
       if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
           title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
-          description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
           variant: "destructive",
         })
         router.push(PUBLIC_PATH.LOGIN)
@@ -58,8 +57,7 @@ export default function Cart({ cartData }: CartProps) {
       }
       
       toast({
-        title: VALIDATION_ERROR_MESSAGE.FAILED_TO_CLEAR_CART,
-        description: error?.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_CLEAR_CART,
+        title: error?.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_CLEAR_CART,
         variant: "destructive",
       })
     }

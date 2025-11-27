@@ -23,7 +23,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
       
       toast({
         title: VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,
-        description: "Item has been removed from your cart.",
+        variant: "success",
       })
       
       router.refresh()
@@ -31,7 +31,6 @@ export default function CartItems({ cartItems }: CartItemsProps) {
       if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
           title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
-          description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
           variant: "destructive",
         })
         router.push(PUBLIC_PATH.LOGIN)

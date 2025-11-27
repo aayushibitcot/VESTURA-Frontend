@@ -49,6 +49,7 @@ export default function Contact() {
           toast({
             title: VALIDATION_ERROR_MESSAGE.CONTACT_SUBMITTED_SUCCESSFULLY,
             description: result.message || VALIDATION_ERROR_MESSAGE.CONTACT_SUBMITTED_SUCCESSFULLY_DESCRIPTION,
+            variant: "success",
           })
           // Reset form after successful submission
           setForm(defaultForm)
