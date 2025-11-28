@@ -85,6 +85,8 @@ export const VALIDATION_ERROR_MESSAGE = {
   FILE_SIZE_TOO_LARGE: "Image size must not exceed 500 KB. Please choose a smaller image.",
   FAILED_TO_UPLOAD_IMAGE: "Failed to upload image",
   UPLOAD_IMAGE_SUCCESSFULLY: "Image uploaded successfully",
+  FAILED_TO_FETCH_USER: "Failed to fetch user details",
+  USER_FETCHED_SUCCESSFULLY: "User details fetched successfully",
 };
 
 // Default pagination

@@ -3,7 +3,7 @@
 import { AppDispatch } from "@/store/store";
 import * as userReducer from "./reducer";
 import * as authReducer from "../auth/reducer";
-import { put } from "@/store/serverApiAction/serverApis";
+import { put, get } from "@/store/serverApiAction/serverApis";
 import Cookies from "js-cookie";
 import { config } from "@/utils/config";
 import { API_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant";
@@ -16,6 +16,14 @@ export interface UpdateUserProfileData {
 }
 
 export interface UpdateUserProfileResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    user?: any;
+  };
+}
+
+export interface GetUserResponse {
   success: boolean;
   message?: string;
   data?: {
@@ -74,6 +82,52 @@ export const uploadImage = async (file: File): Promise<UploadImageResponse> => {
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Network error occurred while uploading image',
+    };
+  }
+};
+
+export const getUser = async (userId: string | number, dispatch: AppDispatch): Promise<GetUserResponse> => {
+  try {
+    const res = await get(`/api/users/${userId}`);
+
+    if (!res.success) {
+      dispatch(userReducer.setError(res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_FETCH_USER));
+      return { 
+        success: false, 
+        message: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_FETCH_USER 
+      };
+    }
+
+    const userData = res.data?.user || res.data;
+
+    if (userData) {
+      const profileData = {
+        id: userData.id,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        phone: userData.phone,
+        email: userData.email,
+        username: userData.username,
+        role: userData.role,
+        isActive: userData.isActive,
+        avatar: userData.avatar || null,
+      };
+
+      dispatch(userReducer.updateProfile(profileData));
+      dispatch(authReducer.updateUser({ user: profileData }));
+      dispatch(userReducer.clearError());
+    }
+
+    return {
+      success: true,
+      message: res.message || VALIDATION_ERROR_MESSAGE.USER_FETCHED_SUCCESSFULLY,
+      data: res.data,
+    };
+  } catch (err) {
+    dispatch(userReducer.setError(err instanceof Error ? err.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR));
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
     };
   }
 };
