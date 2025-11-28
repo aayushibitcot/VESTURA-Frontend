@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import ProductCard from "@/components/ui/product-card"
 import AddToCartModal from "@/components/shop/add-to-cart-modal"
+import LoadMore from "@/components/ui/load-more"
 import { PRIVATE_PATH, SORT_OPTIONS } from "@/utils/constant"
 import { Product } from "@/types/products"
 import { Category } from "@/types/categories"
@@ -24,6 +25,7 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
   const [sortOrder, setSortOrder] = useState<string>("featured")
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [displayCount, setDisplayCount] = useState<number>(10)
   
   // Simple function to update URL when category changes
   const handleCategoryChange = (category: string) => {
@@ -48,6 +50,20 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
         return productsToSort
     }
   }, [products, sortOrder])
+
+  useEffect(() => {
+    setDisplayCount(10)
+  }, [products, selectedCategory])
+
+  const displayedProducts = useMemo(() => {
+    return getSortedProducts.slice(0, displayCount)
+  }, [getSortedProducts, displayCount])
+
+  const hasMore = displayCount < getSortedProducts.length
+
+  const handleLoadMore = useCallback(() => {
+    setDisplayCount(prev => prev + 10)
+  }, [])
 
   const handleAddToCart = useCallback((product: Product) => {
     setSelectedProduct(product)
@@ -91,10 +107,8 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
 
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted-foreground">
-          <>
-            Showing {selectedCategory ? products.length : totalProducts}{" "}
-            {(selectedCategory ? products.length : totalProducts) === 1 ? "product" : "products"}
-          </>
+          Showing {displayedProducts.length} of {getSortedProducts.length}{" "}
+          {getSortedProducts.length === 1 ? "product" : "products"}
         </p>
         <select className="text-sm border border-border px-4 py-2 bg-background rounded-md" 
           value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
@@ -111,16 +125,16 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
       ) : (
         <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {getSortedProducts.map((product) => (
+          {displayedProducts.map((product) => (
             <ProductCard key={product.sku} product={product} onAddToCart={handleAddToCart} />
           ))}
         </div>
         
-        {/* <LoadMore
-          isLoading={isLoading}
+        <LoadMore
+          isLoading={false}
           hasMore={hasMore}
           onLoadMore={handleLoadMore}
-        /> */}
+        />
       </>
       )}
       <AddToCartModal product={selectedProduct} open={isModalOpen} onOpenChange={handleModalClose} />
