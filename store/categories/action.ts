@@ -1,12 +1,11 @@
 "use client";
 
 import { get } from "../serverApiAction/serverApis";
-import { DEFAULT_PAGINATION, VALIDATION_ERROR_MESSAGE } from "@/utils/constant";
-import { AppDispatch } from "../store";
+import { API_PATH, DEFAULT_PAGINATION, VALIDATION_ERROR_MESSAGE } from "@/utils/constant";
 
-export const fetchCategories = async (dispatch: AppDispatch) => {
+export const fetchCategories = async () => {
   try {
-    const res = await get('/api/categories');
+    const res = await get(API_PATH.CATEGORIES);
     if (!res.success) {
       return {
         message: res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_FETCH_CATEGORIES,
@@ -28,9 +27,9 @@ export const fetchCategories = async (dispatch: AppDispatch) => {
   }
 };
 
-export const fetchProductsByCategory = async (dispatch: AppDispatch,categoryName: string,params?: {page?: number,limit?: number}) => {
+export const fetchProductsByCategory = async (categoryName: string,params?: {page?: number,limit?: number}) => {
   try {
-    const res = await get(`/api/products/category/${encodeURIComponent(categoryName)}`, {
+    const res = await get(`${API_PATH.PRODUCTS_BY_CATEGORY}/${encodeURIComponent(categoryName)}`, {
       page: params?.page?.toString() || DEFAULT_PAGINATION.PAGE.toString(),
       limit: params?.limit?.toString() || DEFAULT_PAGINATION.LIMIT.toString()
     });

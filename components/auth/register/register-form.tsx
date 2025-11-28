@@ -65,14 +65,13 @@ export default function RegisterForm() {
       const res = await signUp(payload)
       if (res?.success) {
         toast({
-          title: VALIDATION_ERROR_MESSAGE.REGISTRATION_SUCCESS,
-          description: res?.message,
+          title: res?.message || VALIDATION_ERROR_MESSAGE.REGISTRATION_SUCCESS,
+          variant: "success",
         })
         setTimeout(() => router.push(PUBLIC_PATH.LOGIN), 1200)
       } else {
         toast({
-          title: VALIDATION_ERROR_MESSAGE.REGISTRATION_FAILED,
-          description: res?.message,
+          title: res?.message || VALIDATION_ERROR_MESSAGE.REGISTRATION_FAILED,
           variant: "destructive",
         })
       }
