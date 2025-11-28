@@ -65,13 +65,46 @@ export default function ProfileForm() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
-    setSelectedFile(file)
-    if (file) {
-      const url = URL.createObjectURL(file)
-      setPreviewUrl(url)
-    } else {
+    
+    if (!file) {
+      setSelectedFile(null)
       setPreviewUrl(null)
+      return
     }
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
+    const fileType = file.type.toLowerCase()
+    
+    if (!allowedTypes.includes(fileType)) {
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.INVALID_FILE_TYPE,
+        variant: "destructive",
+      })
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      setSelectedFile(null)
+      setPreviewUrl(null)
+      return
+    }
+
+    const maxSize = 500 * 1024
+    if (file.size > maxSize) {
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.FILE_SIZE_TOO_LARGE,
+        variant: "destructive",
+      })
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      setSelectedFile(null)
+      setPreviewUrl(null)
+      return
+    }
+
+    setSelectedFile(file)
+    const url = URL.createObjectURL(file)
+    setPreviewUrl(url)
   }
 
   const handleCameraClick = () => {
@@ -81,7 +114,7 @@ export default function ProfileForm() {
   const uploadImageFile = async (file: File): Promise<string | null> => {
     const res = await uploadImage(file)
     if (!res.success) {
-      return res.message || "Failed to upload image"
+      return res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPLOAD_IMAGE 
     }
     
     return res.data?.image || null
@@ -133,7 +166,6 @@ export default function ProfileForm() {
             title: res.message || VALIDATION_ERROR_MESSAGE.UPDATE_SUCCESS, 
             variant: "success"
           })
-          // Clear the selected file and preview after successful upload
           setSelectedFile(null)
           setPreviewUrl(null)
         } else {
@@ -181,7 +213,7 @@ export default function ProfileForm() {
             ref={fileInputRef}
             id="avatar"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/jpg,image/png"
             onChange={handleFileChange}
             className="hidden"
           />
