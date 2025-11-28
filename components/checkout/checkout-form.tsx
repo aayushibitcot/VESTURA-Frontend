@@ -103,8 +103,8 @@ export default function CheckoutForm({ onCreateOrder }: CheckoutFormProps) {
         const response = await onCreateOrder(orderParams)
         if (response.success && response.data && response.data.id) {
           toast({
-            title: VALIDATION_ERROR_MESSAGE.ORDER_CREATED_SUCCESSFULLY,
-            description: response.message,
+            title: response.message || VALIDATION_ERROR_MESSAGE.ORDER_CREATED_SUCCESSFULLY,
+            variant: "success",
           })
           clearCart()
           setTimeout(() => {
@@ -112,15 +112,13 @@ export default function CheckoutForm({ onCreateOrder }: CheckoutFormProps) {
           }, 1000)
         } else {
           toast({
-            title: VALIDATION_ERROR_MESSAGE.FAILED_TO_CREATE_ORDER,
-            description: response.message || VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+            title: response.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_CREATE_ORDER,
             variant: "destructive",
           })
         }
       } catch (error) {
         toast({
-          title: VALIDATION_ERROR_MESSAGE.FAILED_TO_CREATE_ORDER,
-          description: error instanceof Error ? error.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+          title: error instanceof Error ? error.message : VALIDATION_ERROR_MESSAGE.FAILED_TO_CREATE_ORDER,
           variant: "destructive",
         })
       } finally {
