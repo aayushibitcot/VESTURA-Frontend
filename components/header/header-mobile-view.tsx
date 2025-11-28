@@ -87,6 +87,18 @@ export default function HeaderMobileView({
         >
           My Orders
         </Link>
+        <Link
+          href={PRIVATE_PATH.CART}
+          className="text-sm font-medium uppercase tracking-wider text-neutral-200 hover:text-neutral-50 transition-colors py-1 flex items-center gap-2"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <span>Cart</span>
+          {cartCount > 0 && (
+            <span className="bg-neutral-50 text-neutral-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              {cartCount}
+            </span>
+          )}
+        </Link>
         {user ? (
           <>
             <Link
@@ -106,16 +118,15 @@ export default function HeaderMobileView({
               Logout
             </button>
           </>
-        ) :(
-          <Link href={PRIVATE_PATH.CART} className="relative text-neutral-200 hover:text-neutral-50 transition-colors p-1">
-          <ShoppingCart className="h-5 w-5" />
-          {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-neutral-50 text-neutral-900 text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
-              {cartCount}
-            </span>
-          )}
-        </Link>
-        ) }
+        ) : (
+          <Link
+            href={PUBLIC_PATH.LOGIN}
+            className="text-sm font-medium uppercase tracking-wider text-neutral-200 hover:text-neutral-50 transition-colors py-1"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Login
+          </Link>
+        )}
       </div>
     </nav>
   )
