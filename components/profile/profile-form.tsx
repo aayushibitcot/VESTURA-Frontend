@@ -72,14 +72,17 @@ export default function ProfileForm() {
       return
     }
 
+    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
     const fileType = file.type.toLowerCase()
     
     if (!allowedTypes.includes(fileType)) {
       toast({
-        title: VALIDATION_ERROR_MESSAGE.INVALID_FILE_TYPE,
+        title: "Invalid file type",
+        description: "Please upload only JPG, JPEG, or PNG images.",
         variant: "destructive",
       })
+      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -88,12 +91,15 @@ export default function ProfileForm() {
       return
     }
 
-    const maxSize = 500 * 1024
+    // Validate file size (500 KB = 500 * 1024 bytes)
+    const maxSize = 500 * 1024 // 500 KB in bytes
     if (file.size > maxSize) {
       toast({
-        title: VALIDATION_ERROR_MESSAGE.FILE_SIZE_TOO_LARGE,
+        title: "File size too large",
+        description: "Image size must not exceed 500 KB. Please choose a smaller image.",
         variant: "destructive",
       })
+      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -102,6 +108,7 @@ export default function ProfileForm() {
       return
     }
 
+    // File is valid, set it
     setSelectedFile(file)
     const url = URL.createObjectURL(file)
     setPreviewUrl(url)
@@ -114,7 +121,7 @@ export default function ProfileForm() {
   const uploadImageFile = async (file: File): Promise<string | null> => {
     const res = await uploadImage(file)
     if (!res.success) {
-      return res.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPLOAD_IMAGE 
+      return res.message || "Failed to upload image"
     }
     
     return res.data?.image || null
@@ -166,6 +173,7 @@ export default function ProfileForm() {
             title: res.message || VALIDATION_ERROR_MESSAGE.UPDATE_SUCCESS, 
             variant: "success"
           })
+          // Clear the selected file and preview after successful upload
           setSelectedFile(null)
           setPreviewUrl(null)
         } else {
