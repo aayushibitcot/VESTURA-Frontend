@@ -15,7 +15,7 @@ export default function Home({ categories }: { categories: Category[] }) {
         <HeroSection categories={categories} />
         <FeaturesBanner />
         <CategoriesSection categories={categories} />
-        <NewsletterSection />
+        {/* <NewsletterSection /> */}
         <AboutSection />
       </main>
       <Footer categories={categories} />
