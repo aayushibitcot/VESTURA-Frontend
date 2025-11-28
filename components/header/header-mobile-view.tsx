@@ -4,8 +4,10 @@ import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { PRIVATE_PATH, PUBLIC_PATH } from "@/utils/constant"
 import { useTransition } from "react"
+import { ShoppingCart } from "lucide-react"
 
 type HeaderMobileViewProps = {
+  cartCount: number
   mobileMenuOpen: boolean
   setMobileMenuOpen: (open: boolean) => void
   user: any
@@ -13,6 +15,7 @@ type HeaderMobileViewProps = {
 }
 
 export default function HeaderMobileView({
+  cartCount,
   mobileMenuOpen,
   setMobileMenuOpen,
   user,
@@ -103,15 +106,16 @@ export default function HeaderMobileView({
               Logout
             </button>
           </>
-        ) : (
-          <Link
-            href={PUBLIC_PATH.LOGIN}
-            className="text-sm font-medium uppercase tracking-wider text-neutral-200 hover:text-neutral-50 transition-colors py-1"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Login
-          </Link>
-        )}
+        ) :(
+          <Link href={PRIVATE_PATH.CART} className="relative text-neutral-200 hover:text-neutral-50 transition-colors p-1">
+          <ShoppingCart className="h-5 w-5" />
+          {cartCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-neutral-50 text-neutral-900 text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+              {cartCount}
+            </span>
+          )}
+        </Link>
+        ) }
       </div>
     </nav>
   )

@@ -75,6 +75,7 @@ export default function Header({ categories }: HeaderProps) {
           </div>
 
           <HeaderMobileView
+            cartCount={totalCartCount}
             mobileMenuOpen={mobileMenuOpen}
             setMobileMenuOpen={setMobileMenuOpen}
             user={user}
