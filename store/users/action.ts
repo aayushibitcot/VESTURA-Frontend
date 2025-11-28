@@ -6,6 +6,7 @@ import * as authReducer from "../auth/reducer";
 import { put } from "@/store/serverApiAction/serverApis";
 import Cookies from "js-cookie";
 import { config } from "@/utils/config";
+import { API_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant";
 
 export interface UpdateUserProfileData {
   firstName: string;
@@ -38,7 +39,7 @@ const getAuthToken = (): string | null => {
 export const uploadImage = async (file: File): Promise<UploadImageResponse> => {
   try {
     const baseUrl = config.REST_API_URL;
-    const fullUrl = `${baseUrl}/api/image/image-upload`;
+    const fullUrl = `${baseUrl}${API_PATH.IMAGE_UPLOAD}`;
     
     const formData = new FormData();
     formData.append('image', file);
@@ -59,14 +60,14 @@ export const uploadImage = async (file: File): Promise<UploadImageResponse> => {
     if (!response.ok) {
       return {
         success: false,
-        message: result.message || result.error || 'Failed to upload image',
+        message: result.message || result.error || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPLOAD_IMAGE,
         data: result.data,
       };
     }
 
     return {
       success: true,
-      message: result.message || 'Image uploaded successfully',
+      message: result.message || VALIDATION_ERROR_MESSAGE.UPLOAD_IMAGE_SUCCESSFULLY,
       data: result.data || result,
     };
   } catch (error) {
@@ -90,7 +91,7 @@ export const updateUserProfile = async (userId: string | number, userData: Updat
     const res = await put(`/api/users/${userId}`, payload);
 
     if (!res.success) {
-      return { success: false, message: res.message || "Failed to update user profile" };
+      return { success: false, message: res.message || VALIDATION_ERROR_MESSAGE.UPDATE_FAILED };
     }
 
     const updatedUser = res.data?.user || res.data;
@@ -120,7 +121,7 @@ export const updateUserProfile = async (userId: string | number, userData: Updat
   } catch (err) {
     return {
       success: false,
-      message: err instanceof Error ? err.message : "An unexpected error occurred",
+      message: err instanceof Error ? err.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
     };
   }
 };

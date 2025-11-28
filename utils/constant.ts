@@ -81,6 +81,10 @@ export const VALIDATION_ERROR_MESSAGE = {
   FAILED_TO_SUBMIT_CONTACT: "Failed to submit contact form",
   CONTACT_SUBMITTED_SUCCESSFULLY: "Thank you for contacting us. We will get back to you soon.",
   CONTACT_SUBMITTED_SUCCESSFULLY_DESCRIPTION: "We'll get back to you as soon as possible.",
+  INVALID_FILE_TYPE: "Please upload only JPG, JPEG, or PNG images.",
+  FILE_SIZE_TOO_LARGE: "Image size must not exceed 500 KB. Please choose a smaller image.",
+  FAILED_TO_UPLOAD_IMAGE: "Failed to upload image",
+  UPLOAD_IMAGE_SUCCESSFULLY: "Image uploaded successfully",
 };
 
 // Default pagination
@@ -108,6 +112,8 @@ export const  API_PATH = {
   ADD_TO_CART: "/api/cart/items",
   ORDERS: "/api/orders",
   CONTACT: "/api/contact",
+  IMAGE_UPLOAD: "/api/image/image-upload",
+  USERS: "/api/users",
 }
 
 export const capitalizeStatus = (status: string) => {
