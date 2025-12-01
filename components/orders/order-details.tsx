@@ -73,7 +73,7 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
               </div>
               <div className="p-6 space-y-4">
                 {order.items?.map((item: any) => (
-                  <OrderDetailsItem key={item.productSku || item.sku || "unknown-sku"} item={item} />
+                  <OrderDetailsItem key={item.id || item.product?.sku} item={item} />
                 ))}
               </div>  
             </div>  
