@@ -18,7 +18,6 @@ const defaultForm = {
   firstName: "",
   lastName: "",
   phone: "",
-  avatar: "",
 }
 
 type FormType = typeof defaultForm
@@ -36,7 +35,7 @@ export default function RegisterForm() {
         required: ":attribute" + VALIDATION_ERROR_MESSAGE.REQUIRED,
         email: ":attribute" + VALIDATION_ERROR_MESSAGE.INVALID_EMAIL,
         phone: ":attribute" + VALIDATION_ERROR_MESSAGE.INVALID_PHONE,
-        url: ":attribute" + VALIDATION_ERROR_MESSAGE.INVALID_URL,
+        // url: ":attribute" + VALIDATION_ERROR_MESSAGE.INVALID_URL,
       },
       validators: {
         strong_password: {
@@ -155,20 +154,6 @@ export default function RegisterForm() {
           className="h-11"
         />
         {validator.current.message("phone", form.phone, "required|phone", { className: "text-sm text-destructive mt-1", attribute: "phone" })}
-      </div>
-      {/* avatar */}
-      <div className="space-y-2">
-        <Label htmlFor="avatar">Avatar URL (optional)</Label>
-        <Input
-          id="avatar"
-          name="avatar"
-          type="url"
-          placeholder="https://example.com/avatar.jpg"
-          value={form.avatar}
-          onChange={handleChange}
-          className="h-11"
-        />
-        {validator.current.message("avatar", form.avatar, "required|url", { className: "text-sm text-destructive mt-1", attribute: "avatar" })}
       </div>
       {/* password */}     
       <div className="space-y-2">
