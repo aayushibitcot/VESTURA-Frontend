@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Playfair_Display, Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import NextTopLoader from "nextjs-toploader"
 import CartProvider from "@/lib/cart-provider"
 import { ReduxProvider } from "@/components/providers/redux-provider"
 import { Toaster } from "@/components/ui/toaster"
@@ -53,6 +54,17 @@ export default function RootLayout({
       <body className="font-sans antialiased" suppressHydrationWarning>
         <ReduxProvider>
           <CartProvider>
+            <NextTopLoader
+              color="#2563eb"
+              initialPosition={0.08}
+              crawlSpeed={200}
+              height={3}
+              crawl={true}
+              showSpinner={false}
+              easing="ease"
+              speed={200}
+              shadow="0 0 10px #2563eb, 0 0 5px #2563eb"
+            />
             {children}
             <Toaster />
           </CartProvider>
