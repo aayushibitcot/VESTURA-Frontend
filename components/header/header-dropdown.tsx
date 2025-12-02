@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { PRIVATE_PATH, PUBLIC_PATH } from "@/utils/constant"
 
 type HeaderDropdownProps = {
@@ -69,13 +69,8 @@ export default function HeaderDropdown({
                   <div className="absolute -inset-1"></div>
                 )}
                 <div className="absolute -inset-0.5 rounded-full border-2 border-neutral-50"></div>
-                <Avatar className="h-9 w-9 relative z-10">
-                  <AvatarImage 
-                  className="object-cover"
-                    src={user?.avatar} 
-                    alt={user?.firstName || "User"} 
-                  />
-                  <AvatarFallback className="bg-neutral-50 text-neutral-900 font-semibold text-sm">
+                <Avatar className="h-9 w-9 relative z-10 bg-neutral-50 text-neutral-900 font-semibold text-sm">
+                  <AvatarFallback className="w-full h-full flex items-center justify-center uppercase">
                     {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>

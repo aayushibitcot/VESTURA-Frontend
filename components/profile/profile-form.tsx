@@ -196,7 +196,22 @@ export default function ProfileForm() {
     }
   }
 
+  const getUserInitials = () => {
+    const first = (form.firstName || user?.firstName || "").trim()
+    const last = (form.lastName || user?.lastName || "").trim()
+    if (first && last) return `${first[0]}${last[0]}`.toUpperCase()
+    if (first) return first[0].toUpperCase()
+    if (last) return last[0].toUpperCase()
+    if (user?.email) return user.email[0].toUpperCase()
+    return ""
+  }
+
   const currentAvatarUrl = mounted ? (previewUrl || user?.avatar) : null
+
+  if (!mounted) {
+    // Avoid SSR/client mismatch by rendering nothing until mounted
+    return null
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -206,7 +221,9 @@ export default function ProfileForm() {
             {currentAvatarUrl ? (
               <img src={currentAvatarUrl} alt="Avatar" className="h-full w-full object-cover" />
             ) : (
-              <span className="text-sm text-muted-foreground">No avatar</span>
+              <span className="text-3xl font-semibold text-muted-foreground uppercase">
+                {getUserInitials()}
+              </span>
             )}
           </div>
           <button

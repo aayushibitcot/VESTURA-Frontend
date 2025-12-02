@@ -58,13 +58,13 @@ export default function HeaderDesktopView({ setMobileMenuOpen, categories }: Hea
           ))}
         </div>
       </div>
-      <Link
+      {/* <Link
         href={PRIVATE_PATH.CONTACT}
         className="text-sm font-medium uppercase tracking-wider text-neutral-200 hover:text-neutral-50 transition-colors relative group"
       >
         Contact
         <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-neutral-50 transition-all group-hover:w-full"></span>
-      </Link>
+      </Link> */}
       <Link
         href={PRIVATE_PATH.MY_ORDERS}
         className="cursor-pointer text-sm font-medium uppercase tracking-wider text-neutral-200 hover:text-neutral-50 transition-colors py-1"
