@@ -184,7 +184,7 @@ export default function HeroSection({ categories }: { categories: Category[] }) 
                   currentSlide === index ? "text-foreground scale-110" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {String(slide.id).padStart(2, "0")}
+                {String(index + 1).padStart(2, "0")}
               </span>
               <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
                 <div
