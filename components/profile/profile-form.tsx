@@ -287,20 +287,6 @@ export default function ProfileForm() {
           {validator.current.message("phone", form.phone, "required|phone", { className: "text-sm text-destructive mt-1", attribute: "phone" })}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="role">Role</Label>
-          <Input
-            id="role"
-            name="role"
-            type="text"
-            value={form.role}
-            onChange={handleChange}
-            className="h-11"
-            disabled
-          />
-          {validator.current.message("role", form.role, "required", { className: "text-sm text-destructive mt-1", attribute: "role" })}
-        </div>
-      </div>   
-      <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
           id="email"
@@ -311,6 +297,21 @@ export default function ProfileForm() {
           className="h-11"
         />
         {validator.current.message("email", user?.email || "", "required|email", { className: "text-sm text-destructive mt-1", attribute: "email" })}
+          {/* <Label htmlFor="role">Role</Label>
+          <Input
+            id="role"
+            name="role"
+            type="text"
+            value={form.role}
+            onChange={handleChange}
+            className="h-11"
+            disabled
+          />
+          {validator.current.message("role", form.role, "required", { className: "text-sm text-destructive mt-1", attribute: "role" })} */}
+        </div>
+      </div>   
+      <div className="space-y-2">
+      
       </div>
       <div className="flex justify-end">
         <Button type="submit" className="h-11 px-8" disabled={isLoading}>
