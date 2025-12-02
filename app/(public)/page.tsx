@@ -1,10 +1,9 @@
 import Home from "@/components/home"
-import * as API from "@/store/serverApiAction/serverApis";
-import { Category } from "@/types/categories";
-import { API_PATH } from "@/utils/constant";
+import { CONTENTFUL_URL } from "@/utils/constant";
 
 export default async function HomePage() {
-  const response = await API.get<Category[]>(API_PATH.CATEGORIES);
-  const categories = response.data || [];
+  const res = await fetch(CONTENTFUL_URL + `&content_type=categoryTable&include=2`);
+  const data = await res.json();
+  const categories = data;
   return <Home categories={categories} />
 }

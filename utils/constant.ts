@@ -101,3 +101,6 @@ export const  API_PATH = {
   CART: "/api/cart",
   ADD_TO_CART: "/api/cart/items",
 }
+
+export const CONTENTFUL_URL = 
+`${process.env.NEXT_PUBLIC_CONTENTFUL_BASE_URL}/spaces/${process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID}/environments/${process.env.NEXT_PUBLIC_CONTENTFUL_ENVIRONMENT}/entries?access_token=${process.env.NEXT_PUBLIC_CONTENTFUL_ACCESS_TOKEN}`
