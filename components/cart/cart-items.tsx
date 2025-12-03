@@ -57,8 +57,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
     } catch (error: any) {
       if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
-          title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
-          description: VALIDATION_ERROR_MESSAGE.UNAUTHORIZED_ACCESS,
+          title: error?.message || VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
           variant: "destructive",
         })
         router.push(PUBLIC_PATH.LOGIN)
@@ -66,8 +65,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
       }
       
       toast({
-        title: VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
-        description: error?.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
+        title: error?.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
         variant: "destructive",
       })
     }
