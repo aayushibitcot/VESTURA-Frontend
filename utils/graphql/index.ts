@@ -10,7 +10,7 @@ import { ErrorResponse, SingleErrorResponse } from '@/lib/types';
 export const graphqlClient = async () => {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
-  const endpoint = config?.API_URL ?? '';
+  const endpoint = config?.REST_API_URL ?? '';
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
   };

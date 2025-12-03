@@ -4,7 +4,6 @@ import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { PRIVATE_PATH, PUBLIC_PATH } from "@/utils/constant"
 import { useTransition } from "react"
-import { ShoppingCart } from "lucide-react"
 
 type HeaderMobileViewProps = {
   cartCount: number

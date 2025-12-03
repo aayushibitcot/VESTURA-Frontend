@@ -49,7 +49,7 @@ export default function Cart({ cartData }: CartProps) {
     } catch (error: any) {
       if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
-          title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
+          title: error?.message || VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
           variant: "destructive",
         })
         router.push(PUBLIC_PATH.LOGIN)
