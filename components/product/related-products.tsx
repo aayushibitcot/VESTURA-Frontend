@@ -1,10 +1,12 @@
-"use client"
+'use client'
 
 import { useState, useCallback } from "react"
 import type { Product } from "@/types/products"
 import ProductCard from "@/components/ui/product-card"
 import AddToCartModal from "@/components/shop/add-to-cart-modal"
 import { SectionHeading } from "../ui/section-heading"
+import * as API from "@/store/serverApiAction/serverApis"
+import { API_PATH } from "@/utils/constant"
 
 interface RelatedProductsProps {
   products: Product[]
@@ -14,9 +16,33 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleAddToCart = useCallback((product: Product) => {
-    setSelectedProduct(product)
-    setIsModalOpen(true)
+  const handleAddToCart = useCallback(async (product: Product) => {
+    try {
+      const response = await API.get<Product>(`${API_PATH.PRODUCTS}/${product.sku}`)
+      const fullProduct = response?.data
+        ? ({
+            ...response.data,
+            sizes: response.data.sizes || [],
+            colors: response.data.colors || [],
+          } as Product)
+        : ({
+            ...product,
+            sizes: product.sizes || [],
+            colors: product.colors || [],
+          } as Product)
+
+      setSelectedProduct(fullProduct)
+      setIsModalOpen(true)
+    } catch {
+      // Fallback: use the basic product data if the detailed fetch fails
+      const fallbackProduct = {
+        ...product,
+        sizes: product.sizes || [],
+        colors: product.colors || [],
+      } as Product
+      setSelectedProduct(fallbackProduct)
+      setIsModalOpen(true)
+    }
   }, [])
 
   const handleModalClose = useCallback((open: boolean) => {
