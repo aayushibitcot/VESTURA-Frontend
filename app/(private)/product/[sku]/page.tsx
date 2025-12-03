@@ -8,6 +8,7 @@ interface ProductPageProps {
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
+  console.log(params,"params---");
   const { sku } = await params;
   
   const response = await API.get<Product>(`${API_PATH.PRODUCTS}/${sku}`);

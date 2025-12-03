@@ -1,4 +1,3 @@
-"use client"
 import ProductDetails from "@/components/product/product-details"
 import RelatedProducts from "@/components/product/related-products"
 import type { Product } from "@/types/products"

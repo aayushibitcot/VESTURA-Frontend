@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Product } from "@/types/products"
 import { Button } from "@/components/ui/button"
 import { PRIVATE_PATH } from "@/utils/constant"
+import { useRouter } from "next/navigation"
 
 interface ProductCardProps {
   product: Product
@@ -12,14 +13,20 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+  const router=useRouter();
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     onAddToCart(product)
   }
+  const handleClick = ( e: React.MouseEvent, sku: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    router.push(`${PRIVATE_PATH.PRODUCT}/${product.sku}`);
+  }
 
   return (
-    <Link href={`${PRIVATE_PATH.PRODUCT}/${product.sku}`} className="group">
+    <div onClick={(e)=>handleClick(e,product.sku)} className="group w-full text-left">
       <div className="relative aspect-[3/4] overflow-hidden bg-secondary mb-4 rounded-lg">
         <img
           src={product.image || "/placeholder.svg"}
@@ -47,7 +54,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           </Button>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
 

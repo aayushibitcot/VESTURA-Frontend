@@ -1,5 +1,3 @@
-"use client"
-
 import ProductGrid from "@/components/shop/product-grid"
 import { Product } from "@/types/products"
 import { Category } from "@/types/categories"
