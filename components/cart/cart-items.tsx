@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import Link from "next/link"
 import { Trash2, Plus, Minus } from "lucide-react"
@@ -7,6 +7,7 @@ import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE, PUBLIC_PATH } from "@/utils/con
 import { useRouter } from "next/navigation"
 import { CartItemFromAPI } from "@/types/cart"
 import { useCart } from "@/lib/cart-provider"
+import { useEffect, useState } from "react"
 
 interface CartItemsProps {
   cartItems?: CartItemFromAPI[]
@@ -16,10 +17,20 @@ export default function CartItems({ cartItems }: CartItemsProps) {
   const { toast } = useToast()
   const router = useRouter()
   const { removeItemById, updateQuantityById } = useCart()
+  const [localItems, setLocalItems] = useState<CartItemFromAPI[]>(cartItems ?? [])
+  const [pendingItemIds, setPendingItemIds] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    setLocalItems(cartItems ?? [])
+  }, [cartItems])
 
   const handleRemoveItem = async (itemId: string) => {
+    const previousItems = localItems
+    setLocalItems((items) => items.filter((item) => item.id !== itemId))
+
     try {
-      await removeItemById(itemId)
+      setPendingItemIds((prev) => ({ ...prev, [itemId]: true }))
+      await removeItemById(itemId, previousItems.find(item => item.id === itemId)?.product.sku)
       
       toast({
         title: VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,
@@ -28,12 +39,18 @@ export default function CartItems({ cartItems }: CartItemsProps) {
       
       router.refresh()
     } catch (error: any) {
+      setLocalItems(previousItems)
       if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
           title: VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
           variant: "destructive",
         })
         router.push(PUBLIC_PATH.LOGIN)
+        setPendingItemIds((prev) => {
+          const updated = { ...prev }
+          delete updated[itemId]
+          return updated
+        })
         return
       }
       
@@ -41,6 +58,12 @@ export default function CartItems({ cartItems }: CartItemsProps) {
         title: VALIDATION_ERROR_MESSAGE.FAILED_TO_REMOVE_CART_ITEM,
         description: error?.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_REMOVE_CART_ITEM,
         variant: "destructive",
+      })
+    } finally {
+      setPendingItemIds((prev) => {
+        const updated = { ...prev }
+        delete updated[itemId]
+        return updated
       })
     }
   }
@@ -50,17 +73,37 @@ export default function CartItems({ cartItems }: CartItemsProps) {
       return
     }
 
+    const previousItems = localItems
+    setLocalItems((items) =>
+      items.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              quantity: newQuantity,
+              subtotal: (item.product.price || 0) * newQuantity,
+            }
+          : item
+      )
+    )
+
     try {
-      await updateQuantityById(itemId, newQuantity)
+      setPendingItemIds((prev) => ({ ...prev, [itemId]: true }))
+      await updateQuantityById(itemId, newQuantity, previousItems.find(item => item.id === itemId)?.product.sku)
       
       router.refresh()
     } catch (error: any) {
+      setLocalItems(previousItems)
       if (error?.message?.toLowerCase().includes('unauthorized') || error?.error === 'UNAUTHORIZED') {
         toast({
           title: error?.message || VALIDATION_ERROR_MESSAGE.AUTHENTICATION_REQUIRED,
           variant: "destructive",
         })
         router.push(PUBLIC_PATH.LOGIN)
+        setPendingItemIds((prev) => {
+          const updated = { ...prev }
+          delete updated[itemId]
+          return updated
+        })
         return
       }
       
@@ -68,16 +111,22 @@ export default function CartItems({ cartItems }: CartItemsProps) {
         title: error?.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_UPDATE_CART_ITEM_QUANTITY,
         variant: "destructive",
       })
+    } finally {
+      setPendingItemIds((prev) => {
+        const updated = { ...prev }
+        delete updated[itemId]
+        return updated
+      })
     }
   }
 
-  if (!cartItems || cartItems.length === 0) {
+  if (!localItems || localItems.length === 0) {
     return null
   }
 
   return (
     <div className="space-y-4">
-      {cartItems.map((item) => {
+      {localItems.map((item) => {
         const product = item.product
         const itemPrice = typeof product.price === "number" && !isNaN(product.price) ? product.price : 0
 
@@ -129,7 +178,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
                   }}
                   className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Decrease quantity"
-                  disabled={item.quantity <= 1}
+                  disabled={item.quantity <= 1 || pendingItemIds[item.id]}
                 >
                   <Minus className="h-3 w-3" />
                 </button>
@@ -141,8 +190,9 @@ export default function CartItems({ cartItems }: CartItemsProps) {
                     const newQuantity = item.quantity + 1
                     handleUpdateQuantity(item.id, newQuantity)
                   }}
-                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer"
+                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Increase quantity"
+                  disabled={pendingItemIds[item.id]}
                 >
                   <Plus className="h-3 w-3" />
                 </button>

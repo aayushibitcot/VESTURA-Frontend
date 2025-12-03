@@ -40,19 +40,23 @@ function CartInitializer() {
           // Add all items from API to cart
           if (res.data.items.length > 0) {
             res.data.items.forEach((item: any) => {
-              addItemToCart({
-                id: item.product.sku,
-                name: item.product.name,
-                description: item.product.description || "",
-                price: item.product.price,
-                currency: item.product.currency || "USD",
-                image: item.product.image,
-                product_data: {
-                  selectedSize: item.selectedSize,
-                  selectedColor: item.selectedColor,
-                  category: item.product.category || "",
+              addItemToCart(
+                {
+                  id: item.product.sku,
+                  name: item.product.name,
+                  description: item.product.description || "",
+                  price: item.product.price,
+                  currency: item.product.currency || "USD",
+                  image: item.product.image,
+                  product_data: {
+                    selectedSize: item.selectedSize,
+                    selectedColor: item.selectedColor,
+                    category: item.product.category || "",
+                    cartItemId: item.id,
+                  },
                 },
-              }, { count: item.quantity })
+                { count: item.quantity }
+              )
             })
           }
         }
@@ -126,19 +130,23 @@ export function useCart() {
         // Add all items from API to cart
         if (res.data.items.length > 0) {
           res.data.items.forEach((item: any) => {
-            addItemToCart({
-              id: item.product.sku,
-              name: item.product.name,
-              description: item.product.description || "",
-              price: item.product.price,
-              currency: item.product.currency || "USD",
-              image: item.product.image,
-              product_data: {
-                selectedSize: item.selectedSize,
-                selectedColor: item.selectedColor,
-                category: item.product.category || "",
+            addItemToCart(
+              {
+                id: item.product.sku,
+                name: item.product.name,
+                description: item.product.description || "",
+                price: item.product.price,
+                currency: item.product.currency || "USD",
+                image: item.product.image,
+                product_data: {
+                  selectedSize: item.selectedSize,
+                  selectedColor: item.selectedColor,
+                  category: item.product.category || "",
+                  cartItemId: item.id,
+                },
               },
-            }, { count: item.quantity })
+              { count: item.quantity }
+            )
           })
         }
       }
@@ -154,6 +162,7 @@ export function useCart() {
 
   // Convert cartDetails to array format compatible with existing code
   const cartItems = Object.values(cartDetails || {}).map((item: any) => ({
+    id: item.product_data?.cartItemId ?? item.id,
     sku: item.id,
     name: item.name,
     description: item.description,
@@ -218,13 +227,22 @@ export function useCart() {
   }
 
   // Remove item by ID (for cart-items component)
-  const removeItemById = async (itemId: string) => {
+  const removeItemById = async (itemId: string, fallbackSku?: string) => {
+    const cartEntry = Object.values(cartDetails || {}).find(
+      (item: any) => item.product_data?.cartItemId === itemId
+    ) as any
+    const sku = cartEntry?.id ?? fallbackSku
+
     try {
+      if (sku) {
+        removeItemFromCart(sku)
+      }
       await removeCartItem(itemId)
-      // Sync cart from API after successful removal
-      await syncCartFromAPI()
     } catch (error) {
       console.error("Error removing item by ID:", error)
+      if (sku) {
+        await syncCartFromAPI()
+      }
       throw error
     }
   }
@@ -266,22 +284,35 @@ export function useCart() {
   }
 
   // Update quantity by item ID (for cart-items component)
-  const updateQuantityById = async (itemId: string, quantity: number) => {
+  const updateQuantityById = async (itemId: string, quantity: number, fallbackSku?: string) => {
     if (quantity < 1) {
-      await removeItemById(itemId)
+      await removeItemById(itemId, fallbackSku)
       return
+    }
+
+    const cartEntry = Object.values(cartDetails || {}).find(
+      (item: any) => item.product_data?.cartItemId === itemId
+    ) as any
+
+    const sku = cartEntry?.id ?? fallbackSku
+    const previousQuantity = cartEntry?.quantity
+
+    if (sku) {
+      setItemQuantity(sku, quantity)
     }
 
     try {
       const res = await updateCartItemQuantityAPI(itemId, quantity)
-      if (res.success) {
-        // Sync cart from API after successful update
-        await syncCartFromAPI()
-      } else {
+      if (!res.success) {
         throw new Error(res.message || "Failed to update quantity")
       }
     } catch (error) {
       console.error("Error updating quantity by ID:", error)
+      if (sku && typeof previousQuantity === "number") {
+        setItemQuantity(sku, previousQuantity)
+      } else {
+        await syncCartFromAPI()
+      }
       throw error
     }
   }

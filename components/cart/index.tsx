@@ -117,9 +117,6 @@ export default function Cart({ cartData }: CartProps) {
       <div className="grid lg:grid-cols-[1fr_400px] gap-8">
         <CartItems cartItems={cartItems} />
         <OrderSummary 
-          orderItems={cartItems} 
-          orderTotal={cartTotal} 
-          useApiData={true}
           variant="cart"
         />
       </div>
