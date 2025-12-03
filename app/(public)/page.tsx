@@ -1,3 +1,6 @@
+
+export const dynamic = 'force-dynamic'
+
 import Home from "@/components/home"
 import { CONTENTFUL_URL } from "@/utils/constant";
 
