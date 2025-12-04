@@ -91,7 +91,7 @@ export default function RegisterForm() {
             id="firstName"
             name="firstName"
             type="text"
-            placeholder="John"
+            placeholder="firstName"
             value={form.firstName}
             onChange={handleChange}
             className="h-11"
@@ -105,7 +105,7 @@ export default function RegisterForm() {
             id="lastName"
             name="lastName"
             type="text"
-            placeholder="Doe"
+            placeholder="lastName"
             value={form.lastName}
             onChange={handleChange}
             className="h-11"
@@ -120,7 +120,7 @@ export default function RegisterForm() {
           id="username"
           name="username"
           type="text"
-          placeholder="johndoe"
+          placeholder="username"
           value={form.username}
           onChange={handleChange}
           className="h-11"
@@ -134,7 +134,7 @@ export default function RegisterForm() {
           id="email"
           name="email"
           type="email"
-          placeholder="you@example.com"
+          placeholder="email"
           value={form.email}
           onChange={handleChange}
           className="h-11"
@@ -148,7 +148,7 @@ export default function RegisterForm() {
           id="phone"
           name="phone"
           type="tel"
-          placeholder="+91-9876543210"
+          placeholder="phone"
           value={form.phone}
           onChange={handleChange}
           className="h-11"
@@ -162,7 +162,7 @@ export default function RegisterForm() {
           id="password"
           name="password"
           type="password"
-          placeholder="Enter your password"
+          placeholder="password"
           value={form.password}
           onChange={handleChange}
           className="h-11"
