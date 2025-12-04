@@ -99,6 +99,8 @@ export const GAP_OPTIONS = [5, 10, 15, 30];
 
 export const STRONG_PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])(?=.{8,})";
 
+export const VALID_PHONE_REGEX = "^[+]?[0-9]{10}$";
+
 export const SORT_OPTIONS = [
   { label: "Featured", value: "featured" },
   { label: "Price: Low to High", value: "price-low-high" },

@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast"
 import { signUp } from "@/store/auth/action"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { PUBLIC_PATH, STRONG_PASSWORD_REGEX, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
+import { PUBLIC_PATH, STRONG_PASSWORD_REGEX, VALID_PHONE_REGEX, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
 import SimpleReactValidator from "simple-react-validator"
 
 const defaultForm = {
@@ -42,6 +42,12 @@ export default function RegisterForm() {
           message: VALIDATION_ERROR_MESSAGE.PASSWORD_MIN_LENGTH,
           rule: (val: string) => {
             return new RegExp(STRONG_PASSWORD_REGEX).test(val);
+          },
+        },
+        valid_phone: {
+          message: VALIDATION_ERROR_MESSAGE.INVALID_PHONE,
+          rule: (val: string) => {
+            return new RegExp(VALID_PHONE_REGEX).test(val);
           },
         },
       },
@@ -86,7 +92,7 @@ export default function RegisterForm() {
       <div className="grid grid-cols-2 gap-4">
         {/* first name */}
         <div className="space-y-2">
-          <Label htmlFor="firstName">First name</Label>
+          <Label htmlFor="firstName">First Name</Label>
           <Input
             id="firstName"
             name="firstName"
@@ -96,11 +102,11 @@ export default function RegisterForm() {
             onChange={handleChange}
             className="h-11"
           />
-          {validator.current.message("firstName", form.firstName, "required", { className: "text-sm text-destructive mt-1", attribute: "firstname" })}
+          {validator.current.message("firstName", form.firstName, "required", { className: "text-sm text-destructive mt-1 capitalize", attribute: "First name" })}
         </div>
         {/* last name */}  
         <div className="space-y-2">
-          <Label htmlFor="lastName">Last name</Label>
+          <Label htmlFor="lastName">Last Name</Label>
           <Input
             id="lastName"
             name="lastName"
@@ -110,12 +116,12 @@ export default function RegisterForm() {
             onChange={handleChange}
             className="h-11"
           />
-          {validator.current.message("lastName", form.lastName, "required", { className: "text-sm text-destructive mt-1", attribute: "lastname" })}
+          {validator.current.message("lastName", form.lastName, "required", { className: "text-sm text-destructive mt-1 capitalize", attribute: "Last name" })}
         </div>
       </div>
       {/* username */}
       <div className="space-y-2">
-        <Label htmlFor="username">Username</Label>
+        <Label htmlFor="username">User Name</Label>
         <Input
           id="username"
           name="username"
@@ -125,11 +131,11 @@ export default function RegisterForm() {
           onChange={handleChange}
           className="h-11"
         />
-        {validator.current.message("username", form.username, "required", { className: "text-sm text-destructive mt-1", attribute: "username" })}
+        {validator.current.message("username", form.username, "required", { className: "text-sm text-destructive mt-1 capitalize", attribute: "User Name" })}
       </div>
       {/* email */}
       <div className="space-y-2">
-        <Label htmlFor="email">Email address</Label>
+        <Label htmlFor="email">Email Address</Label>
         <Input
           id="email"
           name="email"
@@ -139,11 +145,11 @@ export default function RegisterForm() {
           onChange={handleChange}
           className="h-11"
         />
-        {validator.current.message("email", form.email, "required|email", { className: "text-sm text-destructive mt-1", attribute: "email" })}
+        {validator.current.message("email", form.email, "required|email", { className: "text-sm text-destructive mt-1 capitalize", attribute: "Email Address" })}
       </div>
       {/* phone */}
       <div className="space-y-2">
-        <Label htmlFor="phone">Phone number</Label>
+        <Label htmlFor="phone">Phone Number</Label>
         <Input
           id="phone"
           name="phone"
@@ -153,7 +159,7 @@ export default function RegisterForm() {
           onChange={handleChange}
           className="h-11"
         />
-        {validator.current.message("phone", form.phone, "required|phone", { className: "text-sm text-destructive mt-1", attribute: "phone" })}
+        {validator.current.message("phone", form.phone, "required|valid_phone", { className: "text-sm text-destructive mt-1 capitalize", attribute: "Phone" })}
       </div>
       {/* password */}     
       <div className="space-y-2">
@@ -167,7 +173,7 @@ export default function RegisterForm() {
           onChange={handleChange}
           className="h-11"
         />
-        {validator.current.message("password", form.password, "required|strong_password", { className: "text-sm text-destructive mt-1", attribute: "password" })}
+        {validator.current.message("password", form.password, "required|strong_password", { className: "text-sm text-destructive mt-1 capitalize", attribute: "Password" })}
       </div>
       {/* submit button */}
       <Button type="submit" className="w-full h-11" disabled={isLoading}>
