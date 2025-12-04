@@ -80,7 +80,8 @@ export default function OrderSummary({
     ? calculateCartCount(orderItems)
     : cartCount
 
-  const finalShippingCost = shippingCost !== undefined ? shippingCost : variant === "checkout" ? 5.99 : 0
+  // Ensure consistent default shipping cost between Cart and Checkout
+  const finalShippingCost = shippingCost !== undefined ? shippingCost : 5.99
   const finalTotal = variant === "success" ? displayTotal : (displayTotal || 0) + finalShippingCost
 
   const containerClass = variant === "checkout" 
