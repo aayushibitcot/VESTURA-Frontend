@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
+import { Spinner } from "@/components/ui/spinner"
 
 interface AddToCartModalProps {
   product: Product | null
@@ -20,12 +21,14 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState<string>("")
   const [selectedColor, setSelectedColor] = useState<string>("")
+  const [loading, setLoading] = useState(false)
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
       setQuantity(1)
       setSelectedSize("")
       setSelectedColor("")
+      setLoading(false)
     }
     onOpenChange(newOpen)
   }
@@ -47,20 +50,30 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
       return
     }
 
-    await addItem({
-      ...product,
-      quantity: quantity,
-      selectedSize: selectedSize,
-      selectedColor: selectedColor,
-    })
+    setLoading(true)
+    try {
+      await addItem({
+        ...product,
+        quantity: quantity,
+        selectedSize: selectedSize,
+        selectedColor: selectedColor,
+      })
 
-    toast({
-      title: VALIDATION_ERROR_MESSAGE.ITEM_ADDED_TO_CART_SUCCESSFULLY,
-      description: `${quantity} × ${product.name}${selectedSize ? ` (Size: ${selectedSize})` : ""}${selectedColor ? `, ${selectedColor}` : ""} added to your cart.`,
-      variant: "success",
-    })
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.ITEM_ADDED_TO_CART_SUCCESSFULLY,
+        description: `${quantity} × ${product.name}${selectedSize ? ` (Size: ${selectedSize})` : ""}${selectedColor ? `, ${selectedColor}` : ""} added to your cart.`,
+        variant: "success",
+      })
 
-    handleOpenChange(false)
+      handleOpenChange(false)
+    } catch (error) {
+      toast({
+        title: error instanceof Error ? error.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!product) return null
@@ -193,10 +206,17 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
           </Button>
           <Button
             onClick={handleAddToCart}
-            disabled={!product.inStock}
-            className="flex-1 sm:flex-initial bg-foreground text-background hover:bg-foreground/90 uppercase tracking-wide cursor-pointer"
+            disabled={!product.inStock || loading}
+            className="flex-1 sm:flex-initial bg-foreground text-background hover:bg-foreground/90 uppercase tracking-wide cursor-pointer disabled:cursor-not-allowed"
           >
-            Add to Cart
+            {loading ? (
+              <>
+                <Spinner className="mr-2" />
+                Adding...
+              </>
+            ) : (
+              "Add to Cart"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
