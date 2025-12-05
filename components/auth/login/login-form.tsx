@@ -10,6 +10,7 @@ import SimpleReactValidator from "simple-react-validator"
 import { useRouter } from "next/navigation"
 import { useAppDispatch } from "@/store/hooks"
 import { signIn } from "@/store/auth/action"
+import { Eye, EyeOff } from "lucide-react"
 
 const defaultForm = {
   email: "",
@@ -24,6 +25,7 @@ export default function LoginForm() {
   const { toast } = useToast()
   const router = useRouter()
   const dispatch = useAppDispatch()
+  const [showPassword, setShowPassword] = useState(false)
   const [, forceUpdate] = useState(0)
   const validator = useRef(
     new SimpleReactValidator({
@@ -92,15 +94,25 @@ export default function LoginForm() {
             Forgot password?
           </a> */}
         </div>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="password"
-          value={form.password}
-          onChange={handleChange}
-          className="h-11"
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="password"
+            value={form.password}
+            onChange={handleChange}
+            className="h-11"
+          />
+          {/* EYE ICON BUTTON */}
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 cursor-pointer"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
         {validator.current.message("password", form.password, "required", { className: "text-sm text-destructive mt-1 capitalize", attribute: "Password" })}
       </div>
 

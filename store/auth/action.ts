@@ -30,8 +30,12 @@ export const signUp = async (userData: SignupFormType) => {
 };
 
 export const signIn = async (credentials: SignInInput, dispatch: AppDispatch) => {
+  const data = {
+    email : (credentials.email).toLowerCase(),
+    password : credentials.password}
+
   try {
-    const res = await post('/api/auth/signin', credentials);
+    const res = await post('/api/auth/signin', data);
     if (!res.success) {
       return {
         message: res.message,
