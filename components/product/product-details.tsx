@@ -82,7 +82,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           <div>
             <p className="text-sm uppercase tracking-wide text-muted-foreground mb-2">SKU: {product.sku}</p>
             <h1 className="font-serif text-3xl md:text-4xl mb-4">{product.name}</h1>
-            <p className="text-3xl font-medium">${product.price.toFixed(2)}</p>
+            <p className="text-3xl font-medium">${(product.price * quantity).toFixed(2)}</p>
           </div>
 
           <div className="border-t border-b border-border py-6 space-y-4">

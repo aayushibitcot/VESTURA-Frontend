@@ -106,7 +106,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
               <p className="text-sm uppercase tracking-wide text-muted-foreground mb-2">
                 SKU: {product.sku}
               </p>
-              <p className="text-2xl font-medium mb-2">${product.price.toFixed(2)}</p>
+              <p className="text-2xl font-medium mb-2"> ${(product.price * quantity).toFixed(2)}</p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">{product.description}</p>
             </div>
 
