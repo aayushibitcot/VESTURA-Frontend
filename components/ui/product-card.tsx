@@ -26,7 +26,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   }
 
   return (
-    <div onClick={(e)=>handleClick(e,product.sku)} className="group w-full text-left">
+    <div onClick={(e)=>handleClick(e,product.sku)} className="group w-full text-left cursor-pointer">
       <div className="relative aspect-[3/4] overflow-hidden bg-secondary mb-4 rounded-lg">
         <img
           src={product.image || "/placeholder.svg"}

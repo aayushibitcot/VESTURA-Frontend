@@ -83,7 +83,7 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
         <div className="flex gap-8">
           <button
             onClick={() => handleCategoryChange("all")}
-            className={`text-sm uppercase tracking-wide pb-4 border-b-2 transition-colors ${!selectedCategory
+            className={`text-sm uppercase tracking-wide pb-4 border-b-2 transition-colors cursor-pointer ${!selectedCategory
                 ? "border-foreground font-medium"
                 : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
@@ -94,7 +94,7 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
             <button
               key={cat.id}
               onClick={() => handleCategoryChange(cat.slug)}
-              className={`text-sm uppercase tracking-wide pb-4 border-b-2 transition-colors ${selectedCategory === cat.slug
+              className={`text-sm uppercase tracking-wide pb-4 border-b-2 transition-colors cursor-pointer ${selectedCategory === cat.slug
                   ? "border-foreground font-medium"
                   : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
