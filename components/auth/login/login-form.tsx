@@ -30,7 +30,7 @@ export default function LoginForm() {
       autoForceUpdate: { forceUpdate },
       messages: {
         required: ":attribute" + VALIDATION_ERROR_MESSAGE.REQUIRED,
-        email: ":attribute" + VALIDATION_ERROR_MESSAGE.INVALID_EMAIL,
+        email: VALIDATION_ERROR_MESSAGE.INVALID_EMAIL,
       },
     })
   )
@@ -72,17 +72,17 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="email">Email address</Label>
+        <Label htmlFor="email">Email Address</Label>
         <Input
           id="email"
           name="email"
           type="email"
-          placeholder="you@example.com"
+          placeholder="email"
           value={form.email}
           onChange={handleChange}
           className="h-11"
         />
-        {validator.current.message("email", form.email, "required|email", { className: "text-sm text-destructive mt-1" })}
+        {validator.current.message("email", form.email, "required|email", { className: "text-sm text-destructive mt-1 capitalize", attribute: "Email Address" })}
       </div>
 
       <div className="space-y-2">
@@ -96,12 +96,12 @@ export default function LoginForm() {
           id="password"
           name="password"
           type="password"
-          placeholder="Enter your password"
+          placeholder="password"
           value={form.password}
           onChange={handleChange}
           className="h-11"
         />
-        {validator.current.message("password", form.password, "required", { className: "text-sm text-destructive mt-1" })}
+        {validator.current.message("password", form.password, "required", { className: "text-sm text-destructive mt-1 capitalize", attribute: "Password" })}
       </div>
 
       <Button type="submit" className="w-full h-11" disabled={isLoading}>
