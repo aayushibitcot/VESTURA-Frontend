@@ -4,7 +4,7 @@ import { Product } from "@/types/products"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-provider"
 import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
 import { Spinner } from "@/components/ui/spinner"
@@ -21,7 +21,48 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState<string>("")
   const [selectedColor, setSelectedColor] = useState<string>("")
+  const [displayImage, setDisplayImage] = useState<string>(product?.image || "/placeholder.svg")
   const [loading, setLoading] = useState(false)
+
+  const colorOptions = useMemo<string[]>(() => {
+    if (!product) return []
+    const fromMap = product.colorImages ? Object.keys(product.colorImages) : []
+    if (fromMap.length) return fromMap
+    const colorsArray = (product.colors ?? []) as (string | { name: string; hex: string })[]
+    return colorsArray.map((color) => (typeof color === "string" ? color : color.name))
+  }, [product])
+
+  const getColorValue = (colorName: string) => {
+    const colorsArray = (product?.colors ?? []) as (string | { name: string; hex: string })[]
+    const matched = colorsArray.find((color) =>
+      typeof color === "string" ? color === colorName : color.name === colorName,
+    )
+    if (matched && typeof matched !== "string") {
+      return matched.hex || matched.name
+    }
+    return colorName
+  }
+
+  const handleColorSelect = (colorName: string) => {
+    setSelectedColor(colorName)
+    const newImage =
+      product?.colorImages?.[colorName] ||
+      product?.image ||
+      "/placeholder.svg"
+    setDisplayImage(newImage)
+  }
+
+  useEffect(() => {
+    const defaultImage =
+      (product?.colorImages && Object.values(product.colorImages)[0]) ||
+      product?.image ||
+      "/placeholder.svg"
+    setDisplayImage(defaultImage)
+    setQuantity(1)
+    setSelectedSize("")
+    setSelectedColor("")
+    setLoading(false)
+  }, [product])
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
@@ -29,6 +70,11 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
       setSelectedSize("")
       setSelectedColor("")
       setLoading(false)
+      const fallbackImage =
+        (product?.colorImages && Object.values(product.colorImages)[0]) ||
+        product?.image ||
+        "/placeholder.svg"
+      setDisplayImage(fallbackImage)
     }
     onOpenChange(newOpen)
   }
@@ -42,7 +88,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
       })
       return
     }
-    if (product.colors && product.colors.length > 0 && !selectedColor) {
+    if (colorOptions.length > 0 && !selectedColor) {
       toast({
         title: VALIDATION_ERROR_MESSAGE.PLEASE_SELECT_A_COLOR,
         variant: "destructive",
@@ -96,7 +142,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
           {/* Left: Image */}
           <div className="rounded-xl overflow-hidden border bg-muted/20">
             <img
-              src={product.image || "/placeholder.svg"}
+              src={displayImage}
               alt={product.name}
               className="w-full h-full object-cover"
             />
@@ -118,23 +164,23 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
               </p>
   
               {/* Colors */}
-              {product.colors && product.colors.length && product.colors.length > 0 && (
+              {colorOptions.length > 0 && (
                 <div className="space-y-2 mb-[10px]">
                   {/* <label className="text-sm font-semibold tracking-wide">Color</label> */}
                   <label className="text-sm font-medium">
                     Color: {selectedColor && <span className="text-muted-foreground ml-2">{selectedColor}</span>}
                   </label>
                   <div className="flex gap-3 mt-[10px]">
-                    {product.colors.map((color) => {
-                      const colorName = color as string;
+                    {colorOptions.map((colorName) => {
+                      const colorValue = getColorValue(colorName)
                       return (
                       <button
                         key={colorName}
-                        onClick={() => setSelectedColor(colorName)}
+                        onClick={() => handleColorSelect(colorName)}
                         className={`w-10 h-10 rounded-full border shadow-sm transition-all 
                           ${selectedColor === colorName ? "ring-2 ring-black scale-110" : "hover:scale-105"}
                         `}
-                        style={{ backgroundColor: colorName }}
+                        style={{ backgroundColor: colorValue }}
                       />
                     );
                     })}

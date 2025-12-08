@@ -4,7 +4,7 @@ import type { Product } from "@/types/products"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-provider"
 import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
@@ -19,6 +19,45 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState<string>("")
   const [selectedColor, setSelectedColor] = useState<string>("")
+  const [displayImage, setDisplayImage] = useState<string>(product.image || "/placeholder.svg")
+
+  const colorOptions = useMemo<string[]>(() => {
+    const fromMap = product.colorImages ? Object.keys(product.colorImages) : []
+    if (fromMap.length) return fromMap
+    const colorsArray = (product.colors ?? []) as (string | { name: string; hex: string })[]
+    return colorsArray.map((color) => (typeof color === "string" ? color : color.name))
+  }, [product])
+
+  const getColorValue = (colorName: string) => {
+    const colorsArray = (product.colors ?? []) as (string | { name: string; hex: string })[]
+    const matched = colorsArray.find((color) =>
+      typeof color === "string" ? color === colorName : color.name === colorName,
+    )
+    if (matched && typeof matched !== "string") {
+      return matched.hex || matched.name
+    }
+    return colorName
+  }
+
+  const handleColorSelect = (colorName: string) => {
+    setSelectedColor(colorName)
+    const newImage =
+      product.colorImages?.[colorName] ||
+      product.image ||
+      "/placeholder.svg"
+    setDisplayImage(newImage)
+  }
+
+  useEffect(() => {
+    const defaultImage =
+      (product.colorImages && Object.values(product.colorImages)[0]) ||
+      product.image ||
+      "/placeholder.svg"
+    setDisplayImage(defaultImage)
+    setQuantity(1)
+    setSelectedSize("")
+    setSelectedColor("")
+  }, [product])
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -29,7 +68,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       })
       return
     }
-    if (product.colors && product.colors.length > 0 && !selectedColor) {
+    if (colorOptions.length > 0 && !selectedColor) {
       toast({
         title: VALIDATION_ERROR_MESSAGE.PLEASE_SELECT_A_COLOR,
         variant: "destructive",
@@ -69,7 +108,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       <div className="grid lg:grid-cols-2 gap-12">
         {/* Product Image */}
         <div className="relative aspect-square bg-secondary rounded-lg overflow-hidden">
-          <img src={product.image || "/placeholder.svg"} alt={product.name} className="w-full h-full object-cover" />
+          <img src={displayImage} alt={product.name} className="w-full h-full object-cover" />
           {!product.inStock && (
             <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
               <span className="text-xl font-medium uppercase tracking-wide">Out of Stock</span>
@@ -106,25 +145,25 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           </div>
 
           <div className="space-y-4">
-            {product.colors && product.colors.length > 0 && (
+            {colorOptions.length > 0 && (
               <div className="space-y-3">
                 <label className="text-sm font-medium">
                   Color: {selectedColor && <span className="text-muted-foreground ml-2">{selectedColor}</span>}
                 </label>
                 <div className="flex flex-wrap gap-3">
-                  {product.colors.map((color) => {
-                    const colorName = color as string;
-                    
+                  {colorOptions.map((colorName) => {
+                    const colorValue = getColorValue(colorName)
+
                     return (
                       <button
                         key={colorName}
-                        onClick={() => setSelectedColor(colorName)}
+                        onClick={() => handleColorSelect(colorName)}
                         className={`relative w-12 h-12 rounded-full border-2 transition-all cursor-pointer ${
                           selectedColor === colorName
                             ? "border-foreground scale-110"
                             : "border-border hover:border-muted-foreground hover:scale-105"
                         }`}
-                        style={{ backgroundColor: colorName }}
+                        style={{ backgroundColor: colorValue }}
                         title={colorName}
                         aria-label={`Select ${colorName} color`}
                       >
@@ -134,7 +173,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                           </div>
                         )}
                       </button>
-                    );
+                    )
                   })}
                 </div>
               </div>

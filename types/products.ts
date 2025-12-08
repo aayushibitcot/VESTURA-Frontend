@@ -6,11 +6,12 @@ export interface Product {
     currency: string
     image: string
     images?: string[] 
+    colorImages?: Record<string, string>
     category: string
     inStock: boolean
     stockQuantity?: number 
     sizes?: string[] 
-    colors?: string[] | { name: string; hex: string }[] 
+    colors?: string[] | { name: string; hex: string }[]
     specifications?: Record<string, any> 
     rating?: number 
     reviewCount?: number 
