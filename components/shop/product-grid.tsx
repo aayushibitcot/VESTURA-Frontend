@@ -15,8 +15,7 @@ interface ProductGridProps {
   totalProducts: number;
 }
 
-export default function ProductGrid({ products, categories, totalProducts }: ProductGridProps) {
-
+export default function ProductGrid({ products, categories, totalProducts }: ProductGridProps) { 
   const searchParams = useSearchParams()
   const router = useRouter()
 

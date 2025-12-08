@@ -109,7 +109,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         {/* Product Image */}
         <div className="relative aspect-square bg-secondary rounded-lg overflow-hidden">
           <img src={displayImage} alt={product.name} className="w-full h-full object-cover" />
-          {!product.inStock && (
+          {!product.stock && (
             <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
               <span className="text-xl font-medium uppercase tracking-wide">Out of Stock</span>
             </div>
@@ -140,7 +140,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
             <div className="space-y-2">
               <p className="text-sm font-medium">Availability:</p>
-              <p className="text-sm text-muted-foreground">{product.inStock ? "In Stock" : "Out of Stock"}</p>
+              <p className="text-sm text-muted-foreground">{product.stock ? "In Stock" : "Out of Stock"}</p>
             </div>
           </div>
 
@@ -225,7 +225,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
             <Button
               onClick={handleAddToCart}
-              disabled={!product.inStock}
+              disabled={!product.stock}
               className="w-full bg-foreground text-background hover:bg-foreground/90 uppercase tracking-wide py-6 text-base cursor-pointer"
             >
               Add to Cart
