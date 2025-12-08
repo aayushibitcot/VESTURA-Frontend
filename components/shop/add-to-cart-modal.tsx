@@ -247,7 +247,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
   
           <Button
             onClick={handleAddToCart}
-            disabled={!product.stock || loading}
+            disabled={!product.inStock || loading}
             className="w-full md:w-auto bg-black text-white hover:bg-black/90"
           >
             {loading ? (

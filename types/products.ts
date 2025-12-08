@@ -8,7 +8,7 @@ export interface Product {
     images?: string[] 
     colorImages?: Record<string, string>
     category: string
-    stock: boolean
+    inStock: boolean
     stockQuantity?: number 
     sizes?: string[] 
     colors?: string[] | { name: string; hex: string }[]

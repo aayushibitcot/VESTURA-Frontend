@@ -6,7 +6,6 @@ import { Product } from "@/types/products"
 import { Button } from "@/components/ui/button"
 import { PRIVATE_PATH } from "@/utils/constant"
 import { useRouter } from "next/navigation"
-import { log } from "console"
 
 interface ProductCardProps {
   product: Product
@@ -34,7 +33,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           alt={product?.name}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        {!product?.stock && (
+        {!product?.inStock && (
           <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
             <span className="text-sm font-medium uppercase tracking-wide">Out of stock</span>
           </div>
@@ -48,7 +47,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           <span className="font-medium text-lg">${product?.price}</span>
           <Button
             onClick={handleAddToCart}
-            disabled={!product?.stock}
+            disabled={!product?.inStock}
             className="bg-foreground text-background hover:bg-foreground/90 text-sm px-4 cursor-pointer"
           >
             Add to Cart
