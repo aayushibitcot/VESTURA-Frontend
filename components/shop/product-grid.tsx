@@ -91,7 +91,7 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
           </button>
           {categories.map((cat) => (
             <button
-              key={cat.id}
+              key={cat.id || cat.slug}
               onClick={() => handleCategoryChange(cat.slug)}
               className={`text-sm uppercase tracking-wide pb-4 border-b-2 transition-colors cursor-pointer ${selectedCategory === cat.slug
                   ? "border-foreground font-medium"
@@ -125,7 +125,11 @@ export default function ProductGrid({ products, categories, totalProducts }: Pro
         <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {displayedProducts.map((product) => (
-            <ProductCard key={product.sku} product={product} onAddToCart={handleAddToCart} />
+            <ProductCard
+              key={product.sku || product.name}
+              product={product}
+              onAddToCart={handleAddToCart}
+            />
           ))}
         </div>
         
