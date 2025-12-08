@@ -67,18 +67,35 @@ export default function OrderSummary({
     return items.reduce((sum, item) => sum + item.quantity, 0)
   }
 
-  const rawItems = (variant === "success" || useApiData) && orderItems ? orderItems : cartItems
+  const isCartPage = variant === "cart"
+  const hasLiveCartItems = Array.isArray(cartItems) && cartItems.length > 0
+
+  // Prefer live cart data on the cart page for instant updates; fallback to provided items
+  const rawItems =
+    isCartPage && hasLiveCartItems
+      ? cartItems
+      : (variant === "success" || useApiData) && orderItems
+      ? orderItems
+      : cartItems
+
   const items = convertToOrderItems(rawItems)
   
-  const displayTotal = orderTotal !== undefined 
-    ? orderTotal 
-    : (variant === "success" || useApiData) && orderItems
-    ? calculateTotalFromItems(orderItems)
-    : totalPrice
+  const displayTotal =
+    isCartPage && hasLiveCartItems
+      ? totalPrice
+      : orderTotal !== undefined 
+      ? orderTotal 
+      : (variant === "success" || useApiData) && orderItems
+      ? calculateTotalFromItems(orderItems)
+      : totalPrice
 
-  const itemCount = (variant === "success" || useApiData) && orderItems
-    ? calculateCartCount(orderItems)
-    : cartCount
+  // Calculate item count from live cart when available; otherwise, use provided items
+  const itemCount =
+    isCartPage && hasLiveCartItems
+      ? calculateCartCount(cartItems as any)
+      : (variant === "success" || useApiData) && orderItems
+      ? calculateCartCount(orderItems)
+      : calculateCartCount(items)
 
   // Ensure consistent default shipping cost between Cart and Checkout
   const finalShippingCost = shippingCost !== undefined ? shippingCost : 5.99

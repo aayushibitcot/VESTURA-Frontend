@@ -118,6 +118,8 @@ export default function Cart({ cartData }: CartProps) {
         <CartItems cartItems={cartItems} />
         <OrderSummary 
           variant="cart"
+          orderItems={cartItems}
+          useApiData={true}
         />
       </div>
     </div>
