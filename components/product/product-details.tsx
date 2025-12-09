@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE } from "@/utils/constant"
+import { Spinner } from "../ui/spinner"
 
 interface ProductDetailsProps {
   product: Product
@@ -20,7 +21,8 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const [selectedSize, setSelectedSize] = useState<string>("")
   const [selectedColor, setSelectedColor] = useState<string>("")
   const [displayImage, setDisplayImage] = useState<string>(product.image || "/placeholder.svg")
-
+  const [loading, setLoading] = useState(false)
+  
   const colorOptions = useMemo<string[]>(() => {
     const fromMap = product.colorImages ? Object.keys(product.colorImages) : []
     if (fromMap.length) return fromMap
@@ -75,19 +77,28 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       })
       return
     }
-      
-    await addItem({
-      ...product,
-      quantity: quantity,
-      selectedSize: selectedSize,
-      selectedColor: selectedColor,
-    })
+    setLoading(true)
+    try {
+      await addItem({
+        ...product,
+        quantity: quantity,
+        selectedSize: selectedSize,
+        selectedColor: selectedColor,
+      })
 
-    toast({
-      title: VALIDATION_ERROR_MESSAGE.ITEM_ADDED_TO_CART_SUCCESSFULLY,
-      // description: `${quantity} × ${product.name}${selectedSize ? ` (Size: ${selectedSize})` : ""}${selectedColor ? `, ${selectedColor}` : ""} added to your cart.`,
-      variant: "success",
-    })
+      toast({
+        title: VALIDATION_ERROR_MESSAGE.ITEM_ADDED_TO_CART_SUCCESSFULLY,
+        // description: `${quantity} × ${product.name}${selectedSize ? ` (Size: ${selectedSize})` : ""}${selectedColor ? `, ${selectedColor}` : ""} added to your cart.`,
+        variant: "success",
+      })
+    } catch (error) {
+      toast({
+        title: error instanceof Error ? error.message : VALIDATION_ERROR_MESSAGE.UNEXPECTED_ERROR,
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -225,10 +236,16 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
             <Button
               onClick={handleAddToCart}
-              disabled={!product.inStock}
+              disabled={!product.inStock || loading}
               className="w-full bg-foreground text-background hover:bg-foreground/90 uppercase tracking-wide py-6 text-base cursor-pointer"
             >
-              Add to Cart
+              {loading ? (
+              <>
+                <Spinner className="mr-2" /> Adding...
+              </>
+            ) : (
+              "Add to Cart"
+            )}
             </Button>
           </div>
 
