@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { CartItemFromAPI } from "@/types/cart"
 import { useCart } from "@/lib/cart-provider"
 import { useEffect, useState } from "react"
+import { Spinner } from "../ui/spinner"
 
 interface CartItemsProps {
   cartItems?: CartItemFromAPI[]
@@ -19,6 +20,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
   const { removeItemById, updateQuantityById } = useCart()
   const [localItems, setLocalItems] = useState<CartItemFromAPI[]>(cartItems ?? [])
   const [pendingItemIds, setPendingItemIds] = useState<Record<string, boolean>>({})
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     setLocalItems(cartItems ?? [])
@@ -85,7 +87,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
           : item
       )
     )
-
+    setLoading(true)
     try {
       setPendingItemIds((prev) => ({ ...prev, [itemId]: true }))
       await updateQuantityById(itemId, newQuantity, previousItems.find(item => item.id === itemId)?.product.sku)
@@ -117,6 +119,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
         delete updated[itemId]
         return updated
       })
+      setLoading(false)
     }
   }
 
@@ -183,7 +186,13 @@ export default function CartItems({ cartItems }: CartItemsProps) {
                   <Minus className="h-3 w-3" />
                 </button>
                 <span className="px-4 py-1 border-x border-border min-w-[50px] text-center text-sm">
-                  {item.quantity}
+                  {loading ? (
+                    <>
+                      <Spinner className="mr-2" />
+                    </>
+                    ) : (
+                    item.quantity
+                  )}
                 </span>
                 <button
                   onClick={() => {
