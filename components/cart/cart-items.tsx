@@ -176,7 +176,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
                     const newQuantity = Math.max(1, item.quantity - 1)
                     handleUpdateQuantity(item.id, newQuantity)
                   }}
-                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer disabled:opacity-50"
                   aria-label="Decrease quantity"
                   disabled={item.quantity <= 1 || pendingItemIds[item.id]}
                 >
@@ -190,7 +190,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
                     const newQuantity = item.quantity + 1
                     handleUpdateQuantity(item.id, newQuantity)
                   }}
-                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer disabled:opacity-50"
                   aria-label="Increase quantity"
                   disabled={pendingItemIds[item.id]}
                 >
