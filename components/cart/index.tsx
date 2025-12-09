@@ -21,6 +21,8 @@ import { PRIVATE_PATH, VALIDATION_ERROR_MESSAGE, PUBLIC_PATH } from "@/utils/con
 import { useRouter } from "next/navigation"
 import { CartData } from "@/types/cart"
 import { useCart } from "@/lib/cart-provider"
+import { Spinner } from "../ui/spinner"
+import { useState } from "react"
 
 interface CartProps {
   cartData?: CartData
@@ -30,12 +32,14 @@ export default function Cart({ cartData }: CartProps) {
   const { toast } = useToast()
   const router = useRouter()
   const { clearCart } = useCart()
+  const [loading, setLoading] = useState(false)
   
   // Use props directly from server component - no local state needed
   const cartItems = cartData?.items || []
   const cartTotal = cartData?.total || 0
 
   const handleClearCart = async () => {
+    setLoading(true)
     try {
       await clearCart()
 
@@ -60,6 +64,8 @@ export default function Cart({ cartData }: CartProps) {
         title: error?.message || VALIDATION_ERROR_MESSAGE.FAILED_TO_CLEAR_CART,
         variant: "destructive",
       })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -75,7 +81,7 @@ export default function Cart({ cartData }: CartProps) {
           />
           <div className="text-center">
             <Link href={PRIVATE_PATH.SHOP}>
-              <Button className="bg-foreground text-background hover:bg-foreground/90 mx-auto">Continue Shopping</Button>
+              <Button className="bg-foreground text-background hover:bg-foreground/90 mx-auto cursor-pointer">Continue Shopping</Button>
             </Link>
           </div>
         </div>
@@ -91,7 +97,13 @@ export default function Cart({ cartData }: CartProps) {
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                Clear Cart
+                {loading ? (
+                    <>
+                      <Spinner className="mr-2" />
+                    </>
+                  ) : (
+                    "Clear Cart"
+                  )} 
               </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -102,8 +114,8 @@ export default function Cart({ cartData }: CartProps) {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
+                <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+                <AlertDialogAction className="cursor-pointer"
                   onClick={handleClearCart}
                 >
                   Clear Cart
