@@ -182,7 +182,7 @@ export default function OrderSummary({
         <Button
           type="submit"
           disabled={isProcessing}
-          className="w-full bg-foreground text-background hover:bg-foreground/90 uppercase tracking-wide py-6"
+          className="w-full bg-foreground text-background hover:bg-foreground/90 uppercase tracking-wide py-6 cursor-pointer" 
         >
           {isProcessing ? "Processing..." : submitButtonText || "PLACE ORDER"}
         </Button>

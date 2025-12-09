@@ -53,7 +53,7 @@ export default function OrderDesktopTableItem({ order }: OrderDesktopTableItemPr
           <Button
             variant="ghost"
             size="sm"
-            className="text-sm hover:underline flex items-center gap-1"
+            className="text-sm hover:underline flex items-center gap-1 cursor-pointer"
           >
             View Details
             <ChevronRight className="h-4 w-4" />

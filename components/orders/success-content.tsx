@@ -30,10 +30,10 @@ export default function Success() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href={PRIVATE_PATH.SHOP}>
-              <Button className="bg-foreground text-background hover:bg-foreground/90">Continue Shopping</Button>
+              <Button className="bg-foreground text-background hover:bg-foreground/90 cursor-pointer">Continue Shopping</Button>
             </Link>
             <Link href={PRIVATE_PATH.HOME}>
-              <Button variant="outline">Return to Home</Button>
+              <Button variant="outline" className="cursor-pointer">Return to Home</Button>
             </Link>
           </div>
 

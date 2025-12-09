@@ -116,7 +116,7 @@ export default function LoginForm() {
         {validator.current.message("password", form.password, "required", { className: "text-sm text-destructive mt-1 capitalize", attribute: "Password" })}
       </div>
 
-      <Button type="submit" className="w-full h-11" disabled={isLoading}>
+      <Button type="submit" className="w-full h-11 cursor-pointer" disabled={isLoading}>
         {isLoading ? "Signing in..." : "Sign in"}
       </Button>
 

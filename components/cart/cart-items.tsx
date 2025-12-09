@@ -20,7 +20,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
   const { removeItemById, updateQuantityById } = useCart()
   const [localItems, setLocalItems] = useState<CartItemFromAPI[]>(cartItems ?? [])
   const [pendingItemIds, setPendingItemIds] = useState<Record<string, boolean>>({})
-  const [loading, setLoading] = useState(false)
+  const [pendingRemoveIds, setPendingRemoveIds] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     setLocalItems(cartItems ?? [])
@@ -28,12 +28,10 @@ export default function CartItems({ cartItems }: CartItemsProps) {
 
   const handleRemoveItem = async (itemId: string) => {
     const previousItems = localItems
-    setLocalItems((items) => items.filter((item) => item.id !== itemId))
-
     try {
-      setPendingItemIds((prev) => ({ ...prev, [itemId]: true }))
+      setPendingRemoveIds((prev) => ({ ...prev, [itemId]: true }))
       await removeItemById(itemId, previousItems.find(item => item.id === itemId)?.product.sku)
-      
+      setLocalItems((items) => items.filter((item) => item.id !== itemId))
       toast({
         title: VALIDATION_ERROR_MESSAGE.ITEM_REMOVED_FROM_CART_SUCCESSFULLY,
         variant: "success",
@@ -48,7 +46,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
           variant: "destructive",
         })
         router.push(PUBLIC_PATH.LOGIN)
-        setPendingItemIds((prev) => {
+        setPendingRemoveIds((prev) => {
           const updated = { ...prev }
           delete updated[itemId]
           return updated
@@ -62,7 +60,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
         variant: "destructive",
       })
     } finally {
-      setPendingItemIds((prev) => {
+      setPendingRemoveIds((prev) => {
         const updated = { ...prev }
         delete updated[itemId]
         return updated
@@ -87,7 +85,6 @@ export default function CartItems({ cartItems }: CartItemsProps) {
           : item
       )
     )
-    setLoading(true)
     try {
       setPendingItemIds((prev) => ({ ...prev, [itemId]: true }))
       await updateQuantityById(itemId, newQuantity, previousItems.find(item => item.id === itemId)?.product.sku)
@@ -119,7 +116,6 @@ export default function CartItems({ cartItems }: CartItemsProps) {
         delete updated[itemId]
         return updated
       })
-      setLoading(false)
     }
   }
 
@@ -131,6 +127,8 @@ export default function CartItems({ cartItems }: CartItemsProps) {
     <div className="space-y-4">
       {localItems.map((item) => {
         const product = item.product
+        const isPending = pendingItemIds[item.id]
+        const isPendingRemove = pendingRemoveIds[item.id]
         const itemPrice = typeof product.price === "number" && !isNaN(product.price) ? product.price : 0
 
         return (
@@ -169,8 +167,9 @@ export default function CartItems({ cartItems }: CartItemsProps) {
                 onClick={() => handleRemoveItem(item.id)}
                 className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 aria-label="Remove item"
+                disabled={isPendingRemove}
               >
-                <Trash2 className="h-4 w-4" />
+                {isPendingRemove ? <Spinner /> : <Trash2 className="h-4 w-4" />}
               </button>
 
               <div className="flex items-center border border-border">
@@ -181,18 +180,12 @@ export default function CartItems({ cartItems }: CartItemsProps) {
                   }}
                   className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer disabled:opacity-50"
                   aria-label="Decrease quantity"
-                  disabled={item.quantity <= 1 || pendingItemIds[item.id]}
+                  disabled={item.quantity <= 1 || isPending}
                 >
                   <Minus className="h-3 w-3" />
                 </button>
                 <span className="px-4 py-1 border-x border-border min-w-[50px] text-center text-sm">
-                  {loading ? (
-                    <>
-                      <Spinner className="mr-2" />
-                    </>
-                    ) : (
-                    item.quantity
-                  )}
+                  {isPending ? <Spinner /> : item.quantity}
                 </span>
                 <button
                   onClick={() => {
@@ -201,7 +194,7 @@ export default function CartItems({ cartItems }: CartItemsProps) {
                   }}
                   className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer disabled:opacity-50"
                   aria-label="Increase quantity"
-                  disabled={pendingItemIds[item.id]}
+                  disabled={isPending}
                 >
                   <Plus className="h-3 w-3" />
                 </button>

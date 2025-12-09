@@ -177,7 +177,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
                       <button
                         key={colorName}
                         onClick={() => handleColorSelect(colorName)}
-                        className={`w-10 h-10 rounded-full border shadow-sm transition-all 
+                        className={`w-10 h-10 rounded-full border shadow-sm transition-all cursor-pointer 
                           ${selectedColor === colorName ? "ring-2 ring-black scale-110" : "hover:scale-105"}
                         `}
                         style={{ backgroundColor: colorValue }}
@@ -197,7 +197,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
                       <button
                         key={size}
                         onClick={() => setSelectedSize(size)}
-                        className={`px-3 py-2 rounded-md border text-sm font-medium transition-all
+                        className={`px-3 py-2 rounded-md border text-sm font-medium transition-all cursor-pointer
                           ${
                             selectedSize === size
                               ? "border-black bg-black text-white"
@@ -218,14 +218,14 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
                 <div className="flex items-center border rounded-md overflow-hidden">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-4 py-2 hover:bg-muted transition-all"
+                    className="px-4 py-2 hover:bg-muted transition-all cursor-pointer"
                   >
                     -
                   </button>
                   <span className="px-6 py-2 border-x">{quantity}</span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="px-4 py-2 hover:bg-muted transition-all"
+                    className="px-4 py-2 hover:bg-muted transition-all cursor-pointer"
                   >
                     +
                   </button>
@@ -240,7 +240,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
           <Button
             variant="outline"
             onClick={() => handleOpenChange(false)}
-            className="w-full md:w-auto"
+            className="w-full md:w-auto cursor-pointer"
           >
             Cancel
           </Button>
@@ -248,7 +248,7 @@ export default function AddToCartModal({ product, open, onOpenChange }: AddToCar
           <Button
             onClick={handleAddToCart}
             disabled={!product.inStock || loading}
-            className="w-full md:w-auto bg-black text-white hover:bg-black/90"
+            className="w-full md:w-auto bg-black text-white hover:bg-black/90 cursor-pointer"
           >
             {loading ? (
               <>

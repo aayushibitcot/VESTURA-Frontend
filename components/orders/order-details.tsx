@@ -123,7 +123,7 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
 
             {/* Action button */}
             <Link href={PRIVATE_PATH.SHOP}>
-              <Button className="w-full bg-foreground text-background hover:bg-foreground/90">
+              <Button className="w-full bg-foreground text-background hover:bg-foreground/90 cursor-pointer">
                 Continue Shopping
               </Button>
             </Link>

@@ -314,7 +314,7 @@ export default function ProfileForm() {
       
       </div>
       <div className="flex justify-end">
-        <Button type="submit" className="h-11 px-8" disabled={isLoading}>
+        <Button type="submit" className="h-11 px-8 cursor-pointer" disabled={isLoading}>
           {isLoading ? "Saving..." : "Save changes"}
         </Button>
       </div>

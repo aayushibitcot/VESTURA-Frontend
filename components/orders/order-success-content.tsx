@@ -54,7 +54,7 @@ export default function OrderSuccess({ orderDetails }: OrderSuccessProps) {
 
           <div className="text-center">
             <Link href={PRIVATE_PATH.HOME}>
-              <Button variant="outline" className="uppercase tracking-wide px-8 bg-transparent">
+              <Button variant="outline" className="uppercase tracking-wide px-8 bg-transparent cursor-pointer">
                 BACK TO HOME
               </Button>
             </Link>

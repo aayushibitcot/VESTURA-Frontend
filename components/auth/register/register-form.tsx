@@ -176,7 +176,7 @@ export default function RegisterForm() {
         {validator.current.message("password", form.password, "required|strong_password", { className: "text-sm text-destructive mt-1 capitalize", attribute: "Password" })}
       </div>
       {/* submit button */}
-      <Button type="submit" className="w-full h-11" disabled={isLoading}>
+      <Button type="submit" className="w-full h-11 cursor-pointer" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Create account"}
       </Button>
       {/* divider */}

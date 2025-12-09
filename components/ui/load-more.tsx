@@ -32,7 +32,7 @@ export default function LoadMore({
         onClick={onLoadMore}
         disabled={isLoading}
         className={cn(
-          "px-6 py-3 bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+          "px-6 py-3 bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 cursor-pointer",
           buttonClassName
         )}
       >
